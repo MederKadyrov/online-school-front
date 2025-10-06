@@ -17,7 +17,15 @@ const routes: RouteRecordRaw[] = [
     { path: '/teacher/lessons', component: TeacherLessons, meta: { auth: true } },
     { path: '/admin/setup', component: AdminSetupView, meta: { auth: true } },
     { path: '/admin/register-teacher', component: AdminRegisterTeacher, meta: { auth: true } },
+    { path: '/student/courses', component: () => import('../views/StudentCoursesView.vue'), meta: { auth: true } },
+    { path: '/student/courses/:id', name: 'student-course', component: () => import('../views/StudentCourseView.vue'), meta: { auth: true } },
     { path: '/student/grades', component: StudentGrades, meta: { auth: true } },
+    { path: '/student/paragraphs/:paragraphId', component: () => import('../views/StudentParagraphView.vue'), meta: { auth: true } },
+    { path: '/student/paragraphs/:paragraphId/quiz', component: () => import('../views/StudentQuizView.vue'), meta: { auth: true } },
+
+
+
+
     {
         path: '/admin/teachers',
         component: () => import('../views/AdminTeachersListView.vue'),
@@ -42,6 +50,7 @@ const routes: RouteRecordRaw[] = [
         path: '/admin/groups/:id/edit',
         component: () => import('../views/AdminGroupFormView.vue'),
     },
+    { path: '/admin/groups/:id/courses', component: () => import('../views/AdminGroupCoursesView.vue') },
     { path: '/admin/groups/:id/students', component: () => import('../views/AdminGroupStudentsView.vue') },
 
     {
@@ -56,6 +65,9 @@ const routes: RouteRecordRaw[] = [
         path: '/admin/subjects/:id/edit',
         component: () => import('../views/AdminSubjectFormView.vue'),
     },
+
+    { path: '/teacher/courses', component: () => import('../views/TeacherCoursesView.vue') },
+    { path: '/teacher/courses/:id/edit', component: () => import('../views/TeacherCourseEditView.vue') },
 
 ]
 

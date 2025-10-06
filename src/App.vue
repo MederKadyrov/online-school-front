@@ -7,10 +7,22 @@
       <RouterLink to="/teacher/lessons">Teacher Lessons</RouterLink>
       <RouterLink to="/admin/setup">Admin Setup</RouterLink>
       <RouterLink to="/admin/register-teacher">Register Teacher</RouterLink>
+      <RouterLink to="/student/courses">My Courses</RouterLink>
       <RouterLink to="/student/grades">My Grades</RouterLink>
       <RouterLink to="/admin/teachers">Teachers</RouterLink>
       <RouterLink to="/admin/groups">Groups</RouterLink>
       <RouterLink to="/admin/subjects">Subjects</RouterLink>
+
+
+
+
+
+      <button v-if="isAuth" @click="logout" style="margin-left:auto;">Logout</button>
+    </nav>
+
+    <nav style="display:flex; gap:12px; margin-bottom:16px;">
+      <RouterLink to="/teacher/courses">Teacher courses</RouterLink>
+      <RouterLink to="/student/courses">Student courses</RouterLink>
 
 
 

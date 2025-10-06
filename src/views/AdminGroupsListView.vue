@@ -25,7 +25,7 @@
         <th>Литера</th>
         <th>Студентов</th>
         <th>Классный руководитель</th>
-        <th style="width:160px"></th>
+        <th style="width:280px">Действия</th>
       </tr>
       </thead>
       <tbody>
@@ -39,8 +39,9 @@
           <span v-if="g.homeroom">{{ g.homeroom.name }}<br><small>{{ g.homeroom.email }}</small></span>
           <span v-else class="muted">не назначен</span>
         </td>
-        <router-link class="btn" :to="`/admin/groups/${g.id}/students`">Студенты</router-link>
         <td class="actions">
+          <router-link class="btn" :to="`/admin/groups/${g.id}/courses`">Курсы</router-link>
+          <router-link class="btn" :to="`/admin/groups/${g.id}/students`">Студенты</router-link>
           <router-link class="btn" :to="`/admin/groups/${g.id}/edit`">Редактировать</router-link>
           <button class="btn danger" @click="remove(g)">Удалить</button>
         </td>
@@ -56,7 +57,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import api from '../utils/api'
-import {RouterLink} from "vue-router";
 
 const rows = ref<any[]>([])
 const levels = ref<any[]>([])
