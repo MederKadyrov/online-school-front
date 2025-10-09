@@ -33,21 +33,23 @@
       </p>
 
       <!-- Блок кнопок: начало/повтор и возврат -->
-      <div v-if="!attempt || attempt.status!=='in_progress'" class="actions">
+      <div class="actions">
         <button
+          v-if="!inProgress"
           class="btn primary"
           @click="start"
           :disabled="!!quiz.max_attempts && remainingAttempts === 0"
         >
-          {{ attempt && attempt.status!=='in_progress' ? 'Пройти заново' : 'Начать' }}
+          {{ attempt ? 'Пройти заново' : 'Начать' }}
         </button>
         <router-link class="btn" :to="`/student/paragraphs/${paragraphId}`">
           Вернуться к параграфу
         </router-link>
-        <p v-if="quiz.max_attempts && remainingAttempts === 0" class="error">У Вас закончились попытки</p>
+        
       </div>
 
-      <div v-else>
+      <!-- Вопросы во время попытки -->
+      <div v-if="inProgress">
         <div v-for="q in quiz.questions" :key="q.id" class="box">
           <p><strong>#{{ q.position }}.</strong> {{ q.text }} <small>({{ q.points }} б.)</small></p>
 
@@ -79,20 +81,28 @@
 
         <div class="actions">
           <button
-            v-if="attempt && attempt.status==='in_progress'"
             class="btn primary"
             @click="finish"
             :disabled="finishing"
           >
             Завершить
           </button>
-          <span v-if="result" class="ok">
-            Результат: {{ result.score }}/{{ quiz.max_points }} → {{ result.grade_5 }}/5
-          </span>
         </div>
+      </div>
 
-        <!-- После завершения: показать кнопки повтор/возврат -->
-        <div class="actions" v-if="attempt && attempt.status!=='in_progress'">
+      <!-- Итоги после завершения -->
+      <div v-if="result && !inProgress" class="result-summary">
+        <p class="ok">
+          Результат: {{ result.score }}/{{ quiz.max_points }} → {{ result.grade_5 }}/5
+        </p>
+        <p class="muted">
+          Правильных: {{ result.correct_count ?? '–' }},
+          Неправильных: {{ result.wrong_count ?? '–' }}
+          <span v-if="result.unanswered_count !== undefined">,
+            Без ответа: {{ result.unanswered_count }}
+          </span>
+        </p>
+        <div class="actions">
           <button
             class="btn primary"
             v-if="!quiz.max_attempts || remainingAttempts > 0"
@@ -100,10 +110,11 @@
           >
             Пройти заново
           </button>
-          <router-link class="btn" :to="`/student/paragraphs/${paragraphId}`">
-            Вернуться к параграфу
-          </router-link>
+          
         </div>
+        <p v-if="quiz.max_attempts && remainingAttempts === 0" class="error">
+          У Вас закончились попытки
+        </p>
       </div>
 
       <p class="error" v-if="err">{{ err }}</p>
@@ -135,6 +146,8 @@ const remainingAttempts = computed(() => {
   if (!quiz.value?.max_attempts) return null
   return Math.max((quiz.value.max_attempts || 0) - (attempts.value?.length || 0), 0)
 })
+
+const inProgress = computed(() => attempt.value?.status === 'in_progress')
 
 // таймер
 const timeLeft = ref(0)
@@ -190,6 +203,8 @@ async function start(){
   try {
     const { data } = await api.post(`/student/quizzes/${quiz.value.id}/start`, {})
     attempt.value = data
+    chosen.value = {}
+    textAns.value = {}
     // обновим список попыток и таймер
     const list = await api.get(`/student/quizzes/${quiz.value.id}/my-attempts`)
     attempts.value = list.data || []

@@ -338,25 +338,27 @@
             <!-- Левая колонка: карточка теста -->
             <div>
               <label>Название <span class="req">*</span></label>
-              <input v-model="quiz.form.title" class="inp" placeholder="Контрольная по теме «Кинематика»" />
+              <input v-model="quiz.form.title" class="inp" placeholder="Контрольная по теме «Кинематика»" @blur="autoSaveQuizBasics" />
 
               <label>Инструкции</label>
-              <textarea v-model="quiz.form.instructions" class="inp" rows="5" placeholder="Опишите правила: время, критерии..."></textarea>
+              <textarea v-model="quiz.form.instructions" class="inp" rows="5" placeholder="Опишите правила: время, критерии..." @blur="autoSaveQuizBasics"></textarea>
 
               <div class="row">
                 <div>
                   <label>Лимит времени (сек)</label>
-                  <input v-model.number="quiz.form.time_limit_sec" type="number" min="30" class="inp small" />
+                  <input v-model.number="quiz.form.time_limit_sec" type="number" min="30" class="inp small" @blur="autoSaveQuizBasics" />
                 </div>
                 <div>
                   <label>Макс. попыток</label>
-                  <input v-model.number="quiz.form.max_attempts" type="number" min="1" class="inp small" />
+                  <input v-model.number="quiz.form.max_attempts" type="number" min="1" class="inp small" @blur="autoSaveQuizBasics" />
                 </div>
               </div>
 
               <label class="inline">
-                <input type="checkbox" v-model="quiz.form.shuffle" /> Перемешивать вопросы/варианты
+                <input type="checkbox" v-model="quiz.form.shuffle" @change="autoSaveQuizBasics" /> Перемешивать вопросы/варианты
               </label>
+
+              <p v-if="quiz.autoSaved" class="auto-saved">✓ Сохранено</p>
 
 
               <!-- Блок действий -->
@@ -374,14 +376,14 @@
                 <!-- Если тест уже создан -->
                 <template v-else>
                   <button
-                      class="btn primary"
-                      :disabled="quiz.saving || !quiz.form.title"
-                      @click="saveQuiz"
+                      v-if="quiz.item.status === 'published'"
+                      class="btn published"
+                      disabled
                   >
-                    {{ quiz.saving ? 'Сохранение…' : 'Сохранить изменения' }}
+                    Опубликовано ✓
                   </button>
-
                   <button
+                      v-else
                       class="btn"
                       :disabled="quiz.saving || !canPublish"
                       title="Для публикации нужен хотя бы 1 вопрос; для single/multiple — с корректными вариантами"
@@ -575,7 +577,7 @@ const quiz = ref<any>({
   form:{ title:'', instructions:'', time_limit_sec:null, max_attempts:null, shuffle:false },
   questions:[],
   newQ:{ type:'single' },
-  saving:false, err:'', msg:''
+  saving:false, err:'', msg:'', autoSaved:false
 })
 
 /** Публикация — доступна только при валидных вопросах */
@@ -992,7 +994,10 @@ async function removeAssignment() {
 
 // тесты (создание, редактирование, публикация)
 
-function closeQuiz(){ quiz.value.open=false }
+function closeQuiz(){
+  quiz.value.open=false
+  quiz.value.autoSaved=false
+}
 
 /** NEW: Создать (без публикации) */
 
@@ -1020,7 +1025,7 @@ async function openQuiz(ch:any, p:any){
     open:true, paragraph:p, item:null,
     form:{ title:'', instructions:'', time_limit_sec:null, max_attempts:null, shuffle:false },
     questions:[], newQ:{ type:'single' },
-    saving:false, err:'', msg:''
+    saving:false, err:'', msg:'', autoSaved:false
   }
   try{
     const { data } = await api.get(`/teacher/paragraphs/${p.id}/quiz`) // draft/published или null
@@ -1045,11 +1050,12 @@ function applyQuiz(q:any){
 
 
 /** Редактирование существующего */
-/** Сохранить изменения */
-async function saveQuiz(){
+/** Автосохранение базовых полей */
+async function autoSaveQuizBasics(){
   if (!quiz.value.item?.id) return
-  quiz.value.saving=true; quiz.value.err=''; quiz.value.msg=''
-  try{
+  if (!quiz.value.form.title?.trim()) return
+
+  try {
     const { data } = await api.put(`/teacher/quizzes/${quiz.value.item.id}`, {
       title: quiz.value.form.title,
       instructions: quiz.value.form.instructions || null,
@@ -1057,11 +1063,24 @@ async function saveQuiz(){
       max_attempts: quiz.value.form.max_attempts || null,
       shuffle: !!quiz.value.form.shuffle
     })
-    applyQuiz(data)
-    quiz.value.msg = 'Изменения сохранены'
-  }catch(e:any){
-    quiz.value.err = e?.data?.message || e?.message || 'Ошибка сохранения'
-  }finally{ quiz.value.saving=false }
+
+    quiz.value.item = {
+      ...quiz.value.item,
+      title: data.title,
+      instructions: data.instructions,
+      time_limit_sec: data.time_limit_sec,
+      max_attempts: data.max_attempts,
+      shuffle: data.shuffle
+    }
+
+    // Показываем индикатор сохранения
+    quiz.value.autoSaved = true
+    setTimeout(() => { quiz.value.autoSaved = false }, 2000)
+
+  } catch(e: any) {
+    // Тихо игнорируем ошибки автосохранения
+    console.error('Ошибка автосохранения:', e)
+  }
 }
 
 
@@ -1169,6 +1188,7 @@ watch(()=>route.params.id, loadCourse)
 .inp{flex:1;padding:6px;border:1px solid #ddd;border-radius:6px}
 .btn{padding:6px 10px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer}
 .btn.primary{border-color:#0a4ea6;color:#0a4ea6}
+.btn.published{border-color:#22c55e;background:#22c55e;color:#fff;cursor:not-allowed}
 .box{border:1px solid #f0f0f0;border-radius:8px;padding:8px;margin:8px 0}
 .muted{color:#666}
 .error{color:#b00020}
@@ -1235,6 +1255,18 @@ watch(()=>route.params.id, loadCourse)
 
 .dot.red {
   background-color: #ef4444; /* красный */
+}
+
+.auto-saved {
+  color: #0a7f2e;
+  font-size: 14px;
+  margin-top: 8px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 </style>

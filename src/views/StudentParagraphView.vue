@@ -15,9 +15,9 @@
     <p v-else class="muted">В этом параграфе нет ресурсов</p>
     <hr/> <!-- Тест --> <h4>Тест</h4>
     <p v-if="quizErr" class="error">{{ quizErr }}</p>
-    <div v-if="quiz"><p><strong>{{ quiz.title }}</strong></p>
+    <div v-if="quiz && quiz.id"><p><strong>{{ quiz.title }}</strong></p>
       <div class="muted" v-if="quiz.instructions" v-html="quiz.instructions"></div>
-      <p class="muted"> Лимит: {{ quiz.time_limit_sec || 'нет' }} сек, попыток:
+      <p class="muted"> Лимит: {{ quiz.time_limit_sec ? quiz.time_limit_sec + ' сек' : 'без ограничений' }}, попыток:
         {{ quiz.max_attempts || 'без ограничений' }} </p>
       <RouterLink class="btn" :to="`/student/paragraphs/${route.params.paragraphId}/quiz`"> Перейти к тесту</RouterLink>
     </div>
