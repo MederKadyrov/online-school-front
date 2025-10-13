@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import api from '../utils/api'
 
-type User = { id: number; name: string; email: string | null }
+type User = { id: number; name: string; email: string | null; pin?: string }
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -9,8 +9,8 @@ export const useAuthStore = defineStore('auth', {
         user: null as User | null,
     }),
     actions: {
-        async login(email: string, password: string) {
-            const { data } = await api.post('/auth/login', { email, password })
+        async login(pin: string, password: string) {
+            const { data } = await api.post('/auth/login', { pin, password })
             this.token = data.token
             localStorage.setItem('token', this.token)
             this.user = data.user

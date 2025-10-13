@@ -23,8 +23,11 @@
     <nav style="display:flex; gap:12px; margin-bottom:16px;">
       <RouterLink to="/teacher/courses">Teacher courses</RouterLink>
       <RouterLink to="/teacher/submissions">Student Works</RouterLink>
+      <RouterLink to="/teacher/journal">Teacher Journal</RouterLink>
       <RouterLink to="/student/courses">Student courses</RouterLink>
+      <RouterLink to="/student/journal">Student Journal</RouterLink>
       <RouterLink to="/admin/submissions">Student Works</RouterLink>
+      <RouterLink to="/admin/journal">Admin Journal</RouterLink>
 
 
 

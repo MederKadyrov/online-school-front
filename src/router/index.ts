@@ -53,6 +53,7 @@ const routes: RouteRecordRaw[] = [
     { path: '/admin/groups/:id/courses', component: () => import('../views/AdminGroupCoursesView.vue') },
     { path: '/admin/groups/:id/students', component: () => import('../views/AdminGroupStudentsView.vue') },
     { path: '/admin/submissions', component: () => import('../views/AdminSubmissionsView.vue'), meta: { auth: true } },
+    { path: '/admin/journal', component: () => import('../views/AdminJournalView.vue'), meta: { auth: true } },
 
     {
         path: '/admin/subjects',
@@ -70,6 +71,9 @@ const routes: RouteRecordRaw[] = [
     { path: '/teacher/courses', component: () => import('../views/TeacherCoursesView.vue') },
     { path: '/teacher/courses/:id/edit', component: () => import('../views/TeacherCourseEditView.vue') },
     { path: '/teacher/submissions', component: () => import('../views/TeacherSubmissionsView.vue'), meta: { auth: true } },
+    { path: '/teacher/journal', component: () => import('../views/TeacherJournalView.vue'), meta: { auth: true } },
+
+    { path: '/student/journal', component: () => import('../views/StudentJournalView.vue'), meta: { auth: true } },
 
 ]
 

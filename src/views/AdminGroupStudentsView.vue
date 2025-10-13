@@ -157,4 +157,9 @@ Promise.all([loadLevels(), loadGroup()]).then(()=>Promise.all([loadIn(), loadPoo
 .btn.primary{border-color:#0a4ea6; color:#0a4ea6}
 .btn.danger{border-color:#e53935; color:#e53935}
 .error{color:#b00020; margin-top:8px}
+.tbl input[type="checkbox"] {
+width: auto;
+height: auto;
+}
+
 </style>
