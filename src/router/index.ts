@@ -9,10 +9,12 @@ import { useAuthStore } from '../stores/auth'
 import AdminSetupView from "../views/AdminSetupView.vue";
 import AdminRegisterTeacher from '../views/AdminRegisterTeacherView.vue'
 import StudentGrades from '../views/StudentGradesView.vue'
+import ForgotPassword from '../views/ForgotPasswordView.vue'
 
 const routes: RouteRecordRaw[] = [
     { path: '/', component: Home },
     { path: '/login', component: Login },
+    { path: '/forgot-password', component: ForgotPassword },
     { path: '/register-student', component: RegisterStudentWizard, meta: { auth: true } },
     { path: '/teacher/lessons', component: TeacherLessons, meta: { auth: true } },
     { path: '/admin/setup', component: AdminSetupView, meta: { auth: true } },
@@ -54,6 +56,7 @@ const routes: RouteRecordRaw[] = [
     { path: '/admin/groups/:id/students', component: () => import('../views/AdminGroupStudentsView.vue') },
     { path: '/admin/submissions', component: () => import('../views/AdminSubmissionsView.vue'), meta: { auth: true } },
     { path: '/admin/journal', component: () => import('../views/AdminJournalView.vue'), meta: { auth: true } },
+    { path: '/admin/user-passwords', component: () => import('../views/AdminUserPasswordsView.vue'), meta: { auth: true } },
 
     {
         path: '/admin/subjects',

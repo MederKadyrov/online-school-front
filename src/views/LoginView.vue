@@ -7,12 +7,15 @@
     <input v-model="password" type="password" placeholder="password" />
     <button @click="doLogin">Войти</button>
     <div v-if="error" class="error" style="margin-top:8px;">{{ error }}</div>
+    <RouterLink to="/forgot-password" style="display: block; margin-top: 16px; text-align: center; color: #007bff; text-decoration: none;">
+      Забыли пароль?
+    </RouterLink>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 const pin = ref('')

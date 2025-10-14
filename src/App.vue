@@ -28,6 +28,7 @@
       <RouterLink to="/student/journal">Student Journal</RouterLink>
       <RouterLink to="/admin/submissions">Student Works</RouterLink>
       <RouterLink to="/admin/journal">Admin Journal</RouterLink>
+      <RouterLink to="/admin/user-passwords">User Passwords</RouterLink>
 
 
 
