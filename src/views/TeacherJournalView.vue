@@ -458,7 +458,7 @@ async function showGradeDetails(gradeId: number) {
   gradeDetails.value = null
 
   try {
-    const response = await api.get(`/admin/journal/grades/${gradeId}`)
+    const response = await api.get(`/teacher/journal/grades/${gradeId}`)
     gradeDetails.value = response.data
   } catch (error) {
     console.error('Ошибка загрузки деталей оценки:', error)

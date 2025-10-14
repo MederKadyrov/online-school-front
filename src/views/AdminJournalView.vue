@@ -859,6 +859,7 @@ h1 {
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
+  color: #333;
 }
 
 .modal-content h2 {
