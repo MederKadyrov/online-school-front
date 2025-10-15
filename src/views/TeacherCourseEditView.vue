@@ -77,12 +77,13 @@
                         </button>
                         <button class="btn xs" @click="openAssignment(ch, p)">
                           📝 Задание
-                          <span v-if="p.has_assignment" class="dot green"></span>
+                          <span v-if="p.assignment_status === 'published'" class="dot green"></span>
                           <span v-else class="dot red"></span>
                         </button>
                         <button class="btn xs" @click="openQuiz(ch, p)">
                           🧪 Тест
-                          <span v-if="p.has_quiz" class="dot green"></span>
+                          <span v-if="p.quiz_status === 'published'" class="dot green"></span>
+                          <span v-else-if="p.has_quiz" class="dot yellow"></span>
                           <span v-else class="dot red"></span>
                         </button>
                         <button class="btn xs danger" @click="removeParagraph(ch, p)">🗑</button>
@@ -754,6 +755,10 @@ function closeResPanel(){
 async function loadResources(paragraphId:number){
   const { data } = await api.get(`/teacher/paragraphs/${paragraphId}/resources`)
   resPanel.value.items = data
+  // Мгновенно обновим индикатор количества ресурсов в списке параграфов
+  if (resPanel.value.paragraph && resPanel.value.paragraph.id === paragraphId) {
+    resPanel.value.paragraph.resources_count = Array.isArray(data) ? data.length : 0
+  }
 }
 function onPickFile(e:any){
   const f = e.target.files?.[0]
@@ -899,6 +904,11 @@ async function createAndPublishAssignment() {
     // 4) UI-результат
     asg.value.item = { ...created, status: 'published', attachments_path }
     asg.value.msg = 'Задание создано и опубликовано'
+    // Обновим индикатор у параграфа
+    if (asg.value.paragraph) {
+      asg.value.paragraph.has_assignment = true
+      asg.value.paragraph.assignment_status = 'published'
+    }
   } catch (e:any) {
     asg.value.err = e?.data?.message || e?.message || 'Ошибка создания задания'
   } finally {
@@ -983,9 +993,18 @@ async function removeAssignment() {
         due_at: asg.value.item.due_at ? asg.value.item.due_at.slice(0,16) : '',
         max_points: asg.value.item.max_points || 100,
       }
+      // индикатор: зелёный только если опубликовано
+      if (asg.value.paragraph) {
+        asg.value.paragraph.has_assignment = asg.value.item.status === 'published'
+        asg.value.paragraph.assignment_status = asg.value.item.status || null
+      }
     } else {
       // удалено — очистим форму
       asg.value.form = { title:'', instructions:'', due_at:'', max_points:100 }
+      if (asg.value.paragraph) {
+        asg.value.paragraph.has_assignment = false
+        asg.value.paragraph.assignment_status = null
+      }
     }
   } catch (e:any) {
     asg.value.err = e?.data?.message || e?.message || 'Ошибка удаления'
@@ -1014,6 +1033,11 @@ async function createQuiz(){
     })
     const full = await api.get(`/teacher/quizzes/${created.id}`)
     applyQuiz(full.data)
+    // обновим индикаторы у параграфа: тест создан как draft
+    if (quiz.value.paragraph) {
+      quiz.value.paragraph.has_quiz = true
+      quiz.value.paragraph.quiz_status = 'draft'
+    }
     quiz.value.msg = 'Тест создан (draft). Теперь добавьте вопросы и опубликуйте.'
   }catch(e:any){
     quiz.value.err = e?.data?.message || e?.message || 'Ошибка создания теста'
@@ -1095,6 +1119,11 @@ async function publishQuiz(){
     quiz.value.item.status = 'published'
     quiz.value.item.max_points = data.max_points
     quiz.value.msg = 'Опубликовано'
+    // обновим индикаторы у параграфа
+    if (quiz.value.paragraph) {
+      quiz.value.paragraph.has_quiz = true
+      quiz.value.paragraph.quiz_status = 'published'
+    }
   }catch(e:any){
     quiz.value.err = e?.data?.message || e?.message || 'Ошибка публикации'
   }
@@ -1154,6 +1183,11 @@ async function removeQuiz(){
     quiz.value.item = null
     quiz.value.questions = []
     quiz.value.msg = 'Тест удалён'
+    // обновим индикаторы у параграфа
+    if (quiz.value.paragraph) {
+      quiz.value.paragraph.has_quiz = false
+      quiz.value.paragraph.quiz_status = null
+    }
   }catch(e:any){
     quiz.value.err = e?.data?.message || e?.message || 'Ошибка удаления'
   }
@@ -1255,6 +1289,10 @@ watch(()=>route.params.id, loadCourse)
 
 .dot.red {
   background-color: #ef4444; /* красный */
+}
+
+.dot.yellow {
+  background-color: #f59e0b; /* жёлтый (черновик) */
 }
 
 .auto-saved {

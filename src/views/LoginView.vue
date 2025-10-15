@@ -7,9 +7,16 @@
     <input v-model="password" type="password" placeholder="password" />
     <button @click="doLogin">Войти</button>
     <div v-if="error" class="error" style="margin-top:8px;">{{ error }}</div>
-    <RouterLink to="/forgot-password" style="display: block; margin-top: 16px; text-align: center; color: #007bff; text-decoration: none;">
-      Забыли пароль?
-    </RouterLink>
+    <div style="margin-top: 16px; text-align: center;">
+      <RouterLink to="/forgot-password" style="color: #007bff; text-decoration: none;">
+        Забыли пароль?
+      </RouterLink>
+    </div>
+    <div style="margin-top: 8px; text-align: center;">
+      <RouterLink to="/register-student" style="color: #28a745; text-decoration: none; font-weight: 500;">
+        Регистрация студента
+      </RouterLink>
+    </div>
   </div>
 </template>
 

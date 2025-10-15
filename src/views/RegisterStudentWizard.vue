@@ -168,6 +168,18 @@
           </select>
           <small class="error" v-if="errors['student.level_id']">{{ errors['student.level_id'] }}</small>
 
+          <label>Фото студента (необязательно)</label>
+          <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png"
+              @change="handlePhotoChange"
+              :class="['input', errors['student_photo'] && 'error']"
+          />
+          <small class="error" v-if="errors['student_photo']">{{ errors['student_photo'] }}</small>
+          <div v-if="studentPhotoPreview" style="margin-top: 8px;">
+            <img :src="studentPhotoPreview" alt="Preview" style="max-width: 150px; max-height: 150px; border-radius: 8px;" />
+          </div>
+
           <label>Телефон</label>
           <input
               v-model="s.phone"
@@ -277,6 +289,10 @@ const s = ref({
   class_letter: ''
 })
 
+// Фото студента
+const studentPhotoFile = ref<File | null>(null)
+const studentPhotoPreview = ref<string>('')
+
 // Файлы
 const files = ref<Record<string, File | null>>({
   guardian_application: null,
@@ -293,6 +309,22 @@ function clearErrors() { errors.value = {} }
 function pick(key: string, e: Event) {
   const input = e.target as HTMLInputElement
   files.value[key] = (input.files && input.files[0]) || null
+}
+
+function handlePhotoChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0] || null
+  studentPhotoFile.value = file
+
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      studentPhotoPreview.value = ev.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  } else {
+    studentPhotoPreview.value = ''
+  }
 }
 
 function validateClient(): boolean {
@@ -376,6 +408,11 @@ async function submitAll() {
     // файлы
     for (const [k,v] of Object.entries(files.value)) {
       if (v) fd.append(k, v as Blob)
+    }
+
+    // фото студента
+    if (studentPhotoFile.value) {
+      fd.append('student_photo', studentPhotoFile.value)
     }
 
     const { data } = await api.post('/auth/register-student', fd, {

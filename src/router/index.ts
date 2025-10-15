@@ -15,7 +15,7 @@ const routes: RouteRecordRaw[] = [
     { path: '/', component: Home },
     { path: '/login', component: Login },
     { path: '/forgot-password', component: ForgotPassword },
-    { path: '/register-student', component: RegisterStudentWizard, meta: { auth: true } },
+    { path: '/register-student', component: RegisterStudentWizard },
     { path: '/teacher/lessons', component: TeacherLessons, meta: { auth: true } },
     { path: '/admin/setup', component: AdminSetupView, meta: { auth: true } },
     { path: '/admin/register-teacher', component: AdminRegisterTeacher, meta: { auth: true } },
