@@ -1,232 +1,269 @@
 <template>
-  <!-- ЕДИНЫЙ корневой элемент -->
-  <div class="course-editor-container">
-
-    <!-- Основной контент курса -->
-    <div class="wrap" v-if="course">
-      <div class="side">
-        <h3>{{ course.title }}</h3>
-        <p class="muted">{{ course.subject?.name }}, {{ course.level?.number }} класс</p>
-
-        <h4>Модули</h4>
-        <ul class="list">
-          <li v-for="m in course.modules" :key="m.id" :class="{active: m.id===activeModuleId}" @click="activeModuleId=m.id">
-            {{ m.number }}. {{ m.title }}
-          </li>
-        </ul>
-        <button class="btn" @click="createModule">+ Модуль</button>
+  <div class="course-editor">
+    <div class="container" v-if="course">
+      <!-- Course Header -->
+      <div class="course-header">
+        <div class="course-info">
+          <h2>{{ course.title }}</h2>
+          <p class="course-meta">
+            <span class="badge">{{ course.subject?.name }}</span>
+            <span class="badge">{{ course.level?.number }} класс</span>
+          </p>
+        </div>
       </div>
 
-      <div class="main">
-        <div v-if="activeModule">
-          <h4>{{ activeModule.number }}. {{ activeModule.title }}</h4>
-          <div class="newline">
-            <input v-model="newChapterTitle" class="inp" placeholder="Новая глава...">
-            <button class="btn primary" @click="createChapter">Добавить главу</button>
+      <!-- Main Layout -->
+      <div class="editor-layout">
+        <!-- Sidebar: Modules -->
+        <aside class="modules-sidebar">
+          <div class="sidebar-header">
+            <h3>Модули</h3>
+            <button class="btn-icon" @click="createModule" title="Добавить модуль">
+              <span>➕</span>
+            </button>
+          </div>
+          <ul class="modules-list">
+            <li
+              v-for="m in course.modules"
+              :key="m.id"
+              :class="{ active: m.id === activeModuleId }"
+              @click="activeModuleId = m.id"
+              class="module-item"
+            >
+              <span class="module-number">{{ m.number }}</span>
+              <span class="module-title">{{ m.title }}</span>
+            </li>
+          </ul>
+        </aside>
+
+        <!-- Main Content: Chapters & Paragraphs -->
+        <main class="content-area">
+          <div v-if="activeModule" class="module-content">
+            <div class="module-header">
+              <h3>{{ activeModule.number }}. {{ activeModule.title }}</h3>
+            </div>
+
+            <!-- Add Chapter -->
+            <div class="add-section">
+              <input
+                v-model="newChapterTitle"
+                class="form-input"
+                placeholder="Название новой главы..."
+                @keyup.enter="createChapter"
+              >
+              <button class="btn-primary" @click="createChapter">Добавить главу</button>
+            </div>
+
+            <!-- Chapters List -->
+            <div class="chapters-list">
+              <draggable
+                v-model="chapters"
+                item-key="id"
+                handle=".drag-handle"
+                @end="onReorderChapters"
+              >
+                <template #item="{ element: ch }">
+                  <div class="chapter-card">
+                    <!-- Chapter Header -->
+                    <div class="chapter-header">
+                      <span class="drag-handle">⋮⋮</span>
+                      <div class="chapter-title-area">
+                        <h4 v-if="editChapterId !== ch.id">
+                          Глава {{ ch.number }}. {{ ch.title }}
+                        </h4>
+                        <div v-else class="edit-form">
+                          <input v-model="editChapterTitle" class="form-input" />
+                          <button class="btn-sm btn-primary" @click="saveChapter(ch)">Сохранить</button>
+                          <button class="btn-sm" @click="cancelEditChapter">Отмена</button>
+                        </div>
+                      </div>
+                      <div class="chapter-actions">
+                        <button class="btn-icon-sm" @click="startEditChapter(ch)" title="Редактировать">✏️</button>
+                        <button class="btn-icon-sm btn-danger" @click="removeChapter(ch)" title="Удалить">🗑</button>
+                      </div>
+                    </div>
+
+                    <!-- Add Paragraph -->
+                    <div class="add-paragraph">
+                      <input
+                        v-model="newParagraphTitle[ch.id]"
+                        class="form-input-sm"
+                        placeholder="Новый параграф..."
+                        @keyup.enter="createParagraph(ch)"
+                      >
+                      <button class="btn-sm btn-secondary" @click="createParagraph(ch)">+ Параграф</button>
+                    </div>
+
+                    <!-- Paragraphs List -->
+                    <draggable
+                      v-model="paragraphsByChapter[ch.id]"
+                      item-key="id"
+                      handle=".para-drag"
+                      :group="{ name: 'paras-'+ch.id, pull: false, put: false }"
+                      :disabled="!(paragraphsByChapter[ch.id] && paragraphsByChapter[ch.id].length)"
+                      @end="() => onReorderParagraphs(ch)"
+                      class="paragraphs-list"
+                    >
+                      <template #item="{ element: p }">
+                        <div class="paragraph-item">
+                          <span class="para-drag">⋮⋮</span>
+
+                          <div class="paragraph-content">
+                            <template v-if="editParagraphId !== p.id">
+                              <div class="paragraph-info">
+                                <span class="paragraph-title">
+                                  {{ ch.position }}.{{ p.position }} — {{ p.title }}
+                                </span>
+                                <span v-if="p.description" class="paragraph-desc">{{ p.description }}</span>
+                              </div>
+
+                              <div class="paragraph-actions">
+                                <button class="action-btn" @click="startEditParagraph(p)" title="Редактировать">
+                                  ✏️
+                                </button>
+                                <button class="action-btn" @click="openResources(ch, p)" title="Ресурсы">
+                                  📎
+                                  <span :class="['status-dot', p.resources_count > 0 ? 'green' : 'red']"></span>
+                                </button>
+                                <button class="action-btn" @click="openAssignment(ch, p)" title="Задание">
+                                  📝
+                                  <span :class="['status-dot', p.assignment_status === 'published' ? 'green' : 'red']"></span>
+                                </button>
+                                <button class="action-btn" @click="openQuiz(ch, p)" title="Тест">
+                                  🧪
+                                  <span :class="['status-dot', p.quiz_status === 'published' ? 'green' : p.has_quiz ? 'yellow' : 'red']"></span>
+                                </button>
+                                <button class="action-btn btn-danger" @click="removeParagraph(ch, p)" title="Удалить">
+                                  🗑
+                                </button>
+                              </div>
+                            </template>
+
+                            <template v-else>
+                              <div class="edit-paragraph">
+                                <input v-model="editParagraphTitle" class="form-input-sm" placeholder="Название" />
+                                <input v-model="editParagraphDesc" class="form-input-sm" placeholder="Описание (необязательно)" />
+                                <button class="btn-sm btn-primary" @click="saveParagraph(ch, p)">Сохранить</button>
+                                <button class="btn-sm" @click="cancelEditParagraph">Отмена</button>
+                              </div>
+                            </template>
+                          </div>
+                        </div>
+                      </template>
+                    </draggable>
+                  </div>
+                </template>
+              </draggable>
+            </div>
           </div>
 
-          <draggable
-              v-model="chapters"
-              item-key="id"
-              handle=".grab"
-              @end="onReorderChapters"
-              class="list"
-          >
-            <template #item="{ element: ch }">
-              <li class="chapter-item">
-                <span class="grab">⋮⋮</span>
-                <div class="row">
-                  <h5 v-if="editChapterId !== ch.id">Глава {{ ch.number }}. {{ ch.title }}</h5>
-                  <div v-else class="inline-edit">
-                    <input v-model="editChapterTitle" class="inp" />
-                    <button class="btn" @click="saveChapter(ch)">Сохранить</button>
-                    <button class="btn" @click="cancelEditChapter">Отмена</button>
-                  </div>
-                  <div class="row-actions">
-                    <button class="btn" @click="startEditChapter(ch)">✏️</button>
-                    <button class="btn danger" @click="removeChapter(ch)">🗑</button>
-                  </div>
-                </div>
-
-                <!-- Параграфы этой главы -->
-                <div class="newline">
-                  <input v-model="newParagraphTitle[ch.id]" class="inp" placeholder="Новый параграф...">
-                  <button class="btn" @click="createParagraph(ch)">+ Параграф</button>
-                </div>
-
-                <draggable
-                    v-model="paragraphsByChapter[ch.id]"
-                    item-key="id"
-                    handle=".grab"
-                    :group="{ name: 'paras-'+ch.id, pull: false, put: false }"
-                    :disabled="!(paragraphsByChapter[ch.id] && paragraphsByChapter[ch.id].length)"
-                    @end="() => onReorderParagraphs(ch)"
-                    class="list small"
-                >
-                  <template #item="{ element: p }">
-                    <li class="para-item">
-                      <span class="grab">⋮⋮</span>
-                      <template v-if="editParagraphId !== p.id">
-                        {{ ch.position }}.{{ p.position }} — {{ p.title }}
-                        <span class="muted" v-if="p.description"> — {{ p.description }}</span>
-                        <button class="btn xs" @click="startEditParagraph(p)">✏️</button>
-                        <button class="btn xs" @click="openResources(ch, p)">
-                          📎 Ресурсы
-                          <span v-if="p.resources_count > 0" class="dot green"></span>
-                          <span v-else class="dot red"></span>
-                        </button>
-                        <button class="btn xs" @click="openAssignment(ch, p)">
-                          📝 Задание
-                          <span v-if="p.assignment_status === 'published'" class="dot green"></span>
-                          <span v-else class="dot red"></span>
-                        </button>
-                        <button class="btn xs" @click="openQuiz(ch, p)">
-                          🧪 Тест
-                          <span v-if="p.quiz_status === 'published'" class="dot green"></span>
-                          <span v-else-if="p.has_quiz" class="dot yellow"></span>
-                          <span v-else class="dot red"></span>
-                        </button>
-                        <button class="btn xs danger" @click="removeParagraph(ch, p)">🗑</button>
-                      </template>
-                      <template v-else>
-                        <input v-model="editParagraphTitle" class="inp small" />
-                        <input v-model="editParagraphDesc" class="inp small" placeholder="Описание (необязательно)" />
-                        <button class="btn xs" @click="saveParagraph(ch, p)">Сохранить</button>
-                        <button class="btn xs" @click="cancelEditParagraph">Отмена</button>
-                      </template>
-                    </li>
-                  </template>
-                </draggable>
-              </li>
-            </template>
-          </draggable>
-
-          <!-- Альтернативный вид без draggable -->
-
-        </div>
-        <div v-else class="muted">Выберите модуль слева</div>
+          <div v-else class="empty-state">
+            <p>Выберите модуль для редактирования</p>
+          </div>
+        </main>
       </div>
+    </div>
 
-      <!-- Секция групп -->
-      <div class="box">
-        <h4>Группы курса</h4>
-        <p class="muted">Курс будет доступен всем студентам выбранных групп.</p>
-
-        <div class="newline">
-          <input v-model="groupSearch" class="inp" placeholder="Поиск групп (литера/номер)" @input="debouncedLoadGroups" />
-          <button class="btn" @click="loadGroups">Обновить</button>
+    <!-- Панель ресурсов (Modal) -->
+    <div v-if="resPanel.open" class="modal-overlay" @click="closeResPanel">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>📎 Ресурсы: {{ resPanel.paragraph?.title }}</h3>
+          <button class="btn-close" @click="closeResPanel">×</button>
         </div>
 
-        <div class="groups-grid">
-          <label v-for="g in groupsPool" :key="g.id" class="grp">
-            <input type="checkbox" :value="g.id" v-model="selectedGroupIds">
-            <span class="name">{{ g.display_name }}</span>
-            <span class="meta">{{ g.students_count }} студентов</span>
-          </label>
-        </div>
-
-        <div class="actions">
-          <button class="btn primary" @click="saveGroups" :disabled="savingGroups">
-            {{ savingGroups ? 'Сохранение…' : 'Сохранить привязку' }}
-          </button>
-        </div>
-
-        <p v-if="groupsMsg" class="ok">{{ groupsMsg }}</p>
-        <p v-if="groupsErr" class="error">{{ groupsErr }}</p>
-      </div>
-
-      <!-- Панель ресурсов -->
-      <div v-if="resPanel.open" class="res-panel">
-        <div class="res-body">
-          <h4>Ресурсы: {{ resPanel.paragraph?.title }}</h4>
-          <button class="close" @click="closeResPanel">×</button>
-
+        <div class="modal-body">
           <draggable
-              v-model="resPanel.items"
-              item-key="id"
-              handle=".grab"
-              @end="onReorderResources"
-              class="res-list"
+            v-model="resPanel.items"
+            item-key="id"
+            handle=".drag-handle"
+            @end="onReorderResources"
+            class="resources-list"
           >
             <template #item="{ element: r }">
-              <div class="res-item">
-                <div class="res-head">
-                  <span class="grab">⋮⋮</span>
-                  <strong>{{ labelResource(r) }}</strong>
-                  <div class="res-actions">
-                    <button class="btn xs" @click="startEditResource(r)">✏️</button>
-                    <button class="btn xs danger" @click="removeResource(r)">🗑</button>
+              <div class="resource-item">
+                <span class="drag-handle">⋮⋮</span>
+                <div class="resource-content">
+                  <strong class="resource-label">{{ labelResource(r) }}</strong>
+                  <div class="resource-meta">
+                    <span v-if="r.url">🔗 <a :href="r.url" target="_blank">{{ r.url }}</a></span>
+                    <span v-if="r.path">📁 {{ r.path }}</span>
+                    <span v-if="r.duration_sec">⏱️ {{ r.duration_sec }} сек</span>
+                  </div>
+
+                  <div v-if="resEdit.id === r.id" class="edit-section">
+                    <input v-model="resEdit.title" class="form-input-sm" placeholder="Название" />
+                    <input v-if="r.type !== 'file'" v-model="resEdit.url" class="form-input-sm" placeholder="URL" />
+                    <textarea v-if="r.type === 'text'" v-model="resEdit.text_content" class="form-textarea" placeholder="Текст"></textarea>
+                    <div class="button-group">
+                      <button class="btn-sm btn-primary" @click="saveResourceEdit(r)">Сохранить</button>
+                      <button class="btn-sm" @click="cancelResourceEdit">Отмена</button>
+                    </div>
                   </div>
                 </div>
-                <div class="res-meta">
-                  <span v-if="r.url">URL: <a :href="r.url" target="_blank">{{ r.url }}</a></span>
-                  <span v-if="r.path">Файл: {{ r.path }}</span>
-                  <span v-if="r.duration_sec">Длительность: {{ r.duration_sec }} сек</span>
-                </div>
-
-                <div v-if="resEdit.id === r.id" class="res-edit">
-                  <input v-model="resEdit.title" class="inp small" placeholder="Название (необязательно)" />
-                  <input v-if="r.type !== 'file'" v-model="resEdit.url" class="inp small" placeholder="Ссылка (URL)" />
-                  <textarea v-if="r.type === 'text'" v-model="resEdit.text_content" class="inp" placeholder="Текст"></textarea>
-                  <button class="btn xs" @click="saveResourceEdit(r)">Сохранить</button>
-                  <button class="btn xs" @click="cancelResourceEdit">Отмена</button>
+                <div class="resource-actions">
+                  <button class="btn-icon-sm" @click="startEditResource(r)">✏️</button>
+                  <button class="btn-icon-sm btn-danger" @click="removeResource(r)">🗑</button>
                 </div>
               </div>
             </template>
           </draggable>
 
-          <hr />
-          <h5>Добавить ресурс</h5>
-          <div class="add-res">
-            <select v-model="resForm.type" class="inp small">
-              <option value="video">Видео</option>
-              <option value="link">Ссылка</option>
-              <option value="file">Файл</option>
-              <option value="presentation">Презентация</option>
-              <option value="text">Текст</option>
+          <div class="divider"></div>
+
+          <h4>Добавить ресурс</h4>
+          <div class="add-resource-form">
+            <select v-model="resForm.type" class="form-select">
+              <option value="video">📹 Видео</option>
+              <option value="link">🔗 Ссылка</option>
+              <option value="file">📁 Файл</option>
+              <option value="presentation">📊 Презентация</option>
+              <option value="text">📄 Текст</option>
             </select>
 
-            <!-- video/link/presentation -->
             <input
-                v-if="resForm.type !== 'file' && resForm.type !== 'text'"
-                v-model="resForm.url"
-                class="inp"
-                placeholder="URL (YouTube, документ и т.п.)"
+              v-if="resForm.type !== 'file' && resForm.type !== 'text'"
+              v-model="resForm.url"
+              class="form-input"
+              placeholder="URL (YouTube, документ и т.п.)"
             />
 
-            <!-- text -->
             <textarea
-                v-if="resForm.type === 'text'"
-                v-model="resForm.text_content"
-                class="inp"
-                placeholder="Текст контента"
+              v-if="resForm.type === 'text'"
+              v-model="resForm.text_content"
+              class="form-textarea"
+              placeholder="Текст контента"
+              rows="4"
             ></textarea>
 
-            <!-- file -->
-            <input v-if="resForm.type === 'file'" type="file" @change="onPickFile" />
+            <input v-if="resForm.type === 'file'" type="file" @change="onPickFile" class="form-file" />
 
-            <input v-model="resForm.title" class="inp" placeholder="Название ресурса (необязательно)" />
+            <input v-model="resForm.title" class="form-input" placeholder="Название ресурса (необязательно)" />
             <input
-                v-model.number="resForm.duration_sec"
-                class="inp small"
-                type="number"
-                min="0"
-                placeholder="Длительность, сек (опционально)"
+              v-model.number="resForm.duration_sec"
+              class="form-input"
+              type="number"
+              min="0"
+              placeholder="Длительность в секундах (опционально)"
             />
 
-            <div class="actions">
-              <button class="btn primary" @click="addResource" :disabled="resSaving">Добавить</button>
-              <span v-if="resErr" class="error">{{ resErr }}</span>
-            </div>
+            <button class="btn-primary" @click="addResource" :disabled="resSaving">
+              {{ resSaving ? 'Добавление...' : 'Добавить ресурс' }}
+            </button>
+            <p v-if="resErr" class="error-message">{{ resErr }}</p>
           </div>
         </div>
       </div>
+    </div>
 
-<!--   Панель задания (модалка)   -->
-      <div v-if="asg.open" class="res-panel">
-        <div class="res-body">
-          <button class="close" @click="closeAsg">×</button>
-          <h4>Задание: {{ asg.item?.title || 'Новое' }}</h4>
+    <!-- Панель задания (Modal) -->
+    <div v-if="asg.open" class="modal-overlay" @click="closeAsg">
+      <div class="modal-content modal-large" @click.stop>
+        <div class="modal-header">
+          <h3>📝 Задание: {{ asg.item?.title || 'Новое' }}</h3>
+          <button class="btn-close" @click="closeAsg">×</button>
+        </div>
+        <div class="modal-body">
 
           <div class="grid2">
             <div>
@@ -539,13 +576,6 @@ const paragraphsByChapter = ref<Record<number, any[]>>({})
 
 const activeModule = computed(()=> course.value?.modules?.find((m:any)=>m.id===activeModuleId.value))
 
-const groupsPool = ref<any[]>([])
-const selectedGroupIds = ref<number[]>([])
-const groupSearch = ref('')
-const groupsErr = ref('')
-const groupsMsg = ref('')
-const savingGroups = ref(false)
-
 const editChapterId = ref<number|null>(null)
 const editChapterTitle = ref('')
 
@@ -628,43 +658,6 @@ async function createParagraph(ch:any){
   await api.post(`/teacher/chapters/${ch.id}/paragraphs`, { title })
   await loadParagraphs(ch.id)
   newParagraphTitle.value[ch.id] = ''
-}
-
-
-function debounce(fn: Function, ms=400) {
-  let t:any; return (...a:any[]) => { clearTimeout(t); t = setTimeout(()=>fn(...a), ms) }
-}
-const debouncedLoadGroups = debounce(loadGroups, 400)
-
-async function loadGroups() {
-  if (!course.value?.level?.id && !course.value?.level?.number) return
-  groupsErr.value = ''
-  try {
-    // Если course.level имеет id — лучше id, если только number — можно number->level_id заранее на бэке
-    // В нашем CourseController::show мы возвращали level.id и level.number, так что используем level.id.
-    const { data } = await api.get('/teacher/groups', {
-      params: {
-        level_id: course.value.level?.id,
-        search: groupSearch.value || undefined,
-      }
-    })
-    groupsPool.value = data
-  } catch (e:any) {
-    groupsErr.value = e?.data?.message || e?.message || 'Ошибка загрузки групп'
-  }
-}
-
-async function saveGroups() {
-  if (!course.value) return
-  groupsErr.value = ''; groupsMsg.value = ''; savingGroups.value=true
-  try {
-    await api.post(`/teacher/courses/${course.value.id}/groups-sync`, { group_ids: selectedGroupIds.value })
-    groupsMsg.value = 'Привязка сохранена'
-  } catch (e:any) {
-    groupsErr.value = e?.data?.message || e?.message || 'Не удалось сохранить'
-  } finally {
-    savingGroups.value=false
-  }
 }
 
 async function loadChapters(moduleId:number){
@@ -1211,92 +1204,749 @@ watch(()=>route.params.id, loadCourse)
 </script>
 
 <style scoped>
-.wrap{display:grid;grid-template-columns:280px 1fr;gap:12px}
-.side{border:1px solid #eee;border-radius:8px;padding:10px}
-.main{border:1px solid #eee;border-radius:8px;padding:10px}
-.list{list-style:none;padding:0;margin:8px 0}
-.list li{padding:6px;border-radius:6px;cursor:pointer}
-.list li.active, .list li:hover{background:#f6f8ff; color:#213547;}
-.list.small li{padding:4px}
-.newline{display:flex;gap:8px;margin:8px 0}
-.inp{flex:1;padding:6px;border:1px solid #ddd;border-radius:6px}
-.btn{padding:6px 10px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer}
-.btn.primary{border-color:#0a4ea6;color:#0a4ea6}
-.btn.published{border-color:#22c55e;background:#22c55e;color:#fff;cursor:not-allowed}
-.box{border:1px solid #f0f0f0;border-radius:8px;padding:8px;margin:8px 0}
-.muted{color:#666}
-.error{color:#b00020}
-
-.groups-grid{
-  display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap:8px;
-  margin:8px 0;
+/* ============================================
+   Container & Layout
+   ============================================ */
+.course-editor {
+  min-height: 100vh;
+  background: #fafafa;
 }
-.grp{
-  display:flex; flex-direction:column; gap:4px;
-  border:1px solid #eee; border-radius:8px; padding:8px;
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
 }
-.grp .name{ font-weight:600 }
-.grp .meta{ color:#666; font-size:12px }
-.ok{ color:#0a7f2e; margin-top:6px }
 
-.row{display:flex;justify-content:space-between;align-items:center}
-.row-actions{display:flex;gap:6px}
-.inline-edit{display:flex;gap:6px;align-items:center}
-.btn.xs{padding:3px 6px;font-size:12px;}
-.btn{color:#213547;}
-
-.res-panel{
-  position: fixed; inset: 0; background: rgba(0,0,0,.4);
-  display:flex; align-items: center; justify-content: center;
-  z-index: 1000;
+/* Course Header */
+.course-header {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
-.res-body{
-  width: min(900px, 95vw);
-  max-height: 90vh; overflow:auto;
-  background: darkslategray; border-radius:10px; padding:16px; position: relative;
-  border:1px solid #eee;
+
+.course-info h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #212121;
+  margin: 0 0 12px 0;
 }
-.res-body h4 {color:#242424}
-.res-body>button {color:#242424}
-.res-body>h5 {color:#242424}
 
-.res-body .close{
-  position:absolute; right:10px; top:6px; border:none; background:transparent; font-size:22px; cursor:pointer;
+.course-meta {
+  display: flex;
+  gap: 12px;
+  margin: 0;
 }
-.res-list{display:flex; flex-direction:column; gap:8px;}
-.res-item{border:1px solid #f0f0f0; border-radius:8px; padding:8px; color:#242424;}
-.res-head{display:flex; justify-content:space-between; align-items:center;}
-.res-actions{display:flex; gap:6px;}
-.add-res{display:flex; flex-direction:column; gap:8px;}
 
-.chapter-item, .para-item { display:flex; flex-direction:column; gap:6px; }
-.grab { cursor:grab; user-select:none; margin-right:8px; color:#888 }
-.list > li, .list.small > li { display:flex; align-items:flex-start; gap:8px; }
+.badge {
+  padding: 6px 12px;
+  background: #f0f7ff;
+  color: #2196f3;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
 
-.dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
+/* Editor Layout */
+.editor-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+}
+
+/* ============================================
+   Modules Sidebar
+   ============================================ */
+.modules-sidebar {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  height: fit-content;
+  position: sticky;
+  top: 88px;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.sidebar-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #212121;
+  margin: 0;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #2196f3;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background: #1976d2;
+  transform: scale(1.05);
+}
+
+.modules-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.module-item {
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid transparent;
+}
+
+.module-item:hover {
+  background: #f5f5f5;
+}
+
+.module-item.active {
+  background: linear-gradient(90deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.05) 100%);
+  border-color: #2196f3;
+  font-weight: 600;
+}
+
+.module-number {
+  min-width: 28px;
+  height: 28px;
+  background: #e3f2fd;
+  color: #2196f3;
   border-radius: 50%;
-  margin-left: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
 }
 
-.dot.green {
-  background-color: #22c55e; /* зелёный */
+.module-item.active .module-number {
+  background: #2196f3;
+  color: white;
 }
 
-.dot.red {
-  background-color: #ef4444; /* красный */
+.module-title {
+  flex: 1;
+  font-size: 14px;
+  color: #424242;
 }
 
-.dot.yellow {
-  background-color: #f59e0b; /* жёлтый (черновик) */
+.module-item.active .module-title {
+  color: #2196f3;
+}
+
+/* ============================================
+   Content Area
+   ============================================ */
+.content-area {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  min-height: 500px;
+}
+
+.module-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.module-header h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #212121;
+  margin: 0 0 20px 0;
+}
+
+.add-section {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.form-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s;
+  background: white;
+  color: #212121;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #2196f3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.btn-primary {
+  padding: 12px 24px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-primary:hover {
+  background: #1976d2;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ============================================
+   Chapters
+   ============================================ */
+.chapters-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chapter-card {
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 20px;
+  background: #fafafa;
+  transition: all 0.2s;
+}
+
+.chapter-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.chapter-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.drag-handle {
+  cursor: grab;
+  user-select: none;
+  color: #9e9e9e;
+  font-size: 18px;
+  padding: 4px;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.chapter-title-area {
+  flex: 1;
+}
+
+.chapter-title-area h4 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #212121;
+  margin: 0;
+}
+
+.edit-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.chapter-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-icon-sm {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #dee2e6;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.btn-icon-sm:hover {
+  background: #f5f5f5;
+  border-color: #bdbdbd;
+}
+
+.btn-icon-sm.btn-danger:hover {
+  background: #ffebee;
+  border-color: #ef5350;
+  color: #d32f2f;
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  border: 1px solid #dee2e6;
+  background: white;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-sm.btn-primary {
+  background: #2196f3;
+  color: white;
+  border-color: #2196f3;
+}
+
+.btn-sm.btn-primary:hover {
+  background: #1976d2;
+}
+
+.btn-sm.btn-secondary {
+  background: #757575;
+  color: white;
+  border-color: #757575;
+}
+
+.btn-sm.btn-secondary:hover {
+  background: #616161;
+}
+
+/* ============================================
+   Paragraphs
+   ============================================ */
+.add-paragraph {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.form-input-sm {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  transition: all 0.2s;
+  background: white;
+  color: #212121;
+}
+
+.form-input-sm:focus {
+  outline: none;
+  border-color: #2196f3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.paragraphs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.paragraph-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.paragraph-item:hover {
+  border-color: #bdbdbd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.para-drag {
+  cursor: grab;
+  user-select: none;
+  color: #bdbdbd;
+  font-size: 16px;
+  padding-top: 2px;
+}
+
+.para-drag:active {
+  cursor: grabbing;
+}
+
+.paragraph-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.paragraph-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paragraph-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #212121;
+}
+
+.paragraph-desc {
+  font-size: 13px;
+  color: #757575;
+}
+
+.paragraph-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.action-btn:hover {
+  background: #f5f5f5;
+  border-color: #bdbdbd;
+}
+
+.action-btn.btn-danger:hover {
+  background: #ffebee;
+  border-color: #ef5350;
+  color: #d32f2f;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 2px;
+}
+
+.status-dot.green {
+  background: #4caf50;
+}
+
+.status-dot.red {
+  background: #f44336;
+}
+
+.status-dot.yellow {
+  background: #ff9800;
+}
+
+.edit-paragraph {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #9e9e9e;
+}
+
+.empty-state p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* ============================================
+   Modals
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  width: min(800px, 95vw);
+  max-height: 90vh;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-large {
+  width: min(1100px, 95vw);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.modal-header h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #212121;
+  margin: 0;
+}
+
+.btn-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  color: #757575;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.btn-close:hover {
+  background: #e0e0e0;
+  color: #212121;
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Resources */
+.resources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.resource-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.resource-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resource-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #212121;
+}
+
+.resource-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: #757575;
+}
+
+.resource-meta a {
+  color: #2196f3;
+  text-decoration: none;
+}
+
+.resource-meta a:hover {
+  text-decoration: underline;
+}
+
+.resource-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+  margin-top: 12px;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+}
+
+.divider {
+  height: 1px;
+  background: #e0e0e0;
+  margin: 24px 0;
+}
+
+.add-resource-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-select {
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #f8f9fa;
+  color: #212121;
+  cursor: pointer;
+}
+
+.form-textarea {
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #f8f9fa;
+  color: #212121;
+  resize: vertical;
+}
+
+.form-file {
+  padding: 8px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.error-message {
+  color: #d32f2f;
+  background: #ffebee;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 0;
+  border-left: 4px solid #d32f2f;
+  font-size: 14px;
+}
+
+/* Grid layouts for assignment/quiz modals */
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.box {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fafafa;
+  margin: 12px 0;
+}
+
+.box.soft {
+  background: #f8f9fa;
+  border-style: dashed;
+}
+
+.muted {
+  color: #757575;
+  font-size: 14px;
+}
+
+.error {
+  color: #d32f2f;
+  font-size: 14px;
+}
+
+.ok {
+  color: #2e7d32;
+  font-size: 14px;
 }
 
 .auto-saved {
-  color: #0a7f2e;
+  color: #2e7d32;
   font-size: 14px;
   margin-top: 8px;
   animation: fadeIn 0.3s ease-in;
@@ -1307,4 +1957,159 @@ watch(()=>route.params.id, loadCourse)
   to { opacity: 1; }
 }
 
+/* Legacy styles for existing modal content */
+label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+  color: #424242;
+  font-size: 14px;
+}
+
+.inp {
+  padding: 10px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #f8f9fa;
+  color: #212121;
+  width: 100%;
+}
+
+.inp.small {
+  max-width: 200px;
+}
+
+.inp.tiny {
+  max-width: 80px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: 1px solid #dee2e6;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #424242;
+  transition: all 0.2s;
+}
+
+.btn.primary {
+  background: #2196f3;
+  color: white;
+  border-color: #2196f3;
+}
+
+.btn.danger {
+  background: #f44336;
+  color: white;
+  border-color: #f44336;
+}
+
+.btn.published {
+  background: #4caf50;
+  color: white;
+  border-color: #4caf50;
+  cursor: not-allowed;
+}
+
+.btn.xs {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tbl th,
+.tbl td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tbl th {
+  background: #f5f5f5;
+  font-weight: 600;
+}
+
+.hint {
+  font-size: 13px;
+  color: #757575;
+  font-style: italic;
+}
+
+label.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: normal;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .editor-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .modules-sidebar {
+    position: static;
+  }
+
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .course-header {
+    padding: 16px;
+  }
+
+  .content-area {
+    padding: 16px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .add-section {
+    flex-direction: column;
+  }
+
+  .paragraph-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .action-btn {
+    justify-content: center;
+  }
+}
 </style>

@@ -1,24 +1,54 @@
 <template>
-  <div class="card">
-    <h3>Мои курсы</h3>
-
-    <div class="quick">
-      <select v-model.number="form.subject_id" class="inp">
-        <option :value="0">Выбери предмет</option>
-        <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
-      </select>
-      <select v-model.number="form.level_id" class="inp">
-        <option :value="0">Класс (уровень)</option>
-        <option v-for="l in levels" :key="l.id" :value="l.id">{{ l.number }} класс</option>
-      </select>
-      <button class="btn primary" @click="createCourse">Создать курс</button>
+  <div class="container">
+    <div class="page-header">
+      <h2>Мои курсы</h2>
     </div>
 
-    <div class="grid">
-      <div class="course" v-for="c in rows" :key="c.id">
-        <h4>{{ c.title }}</h4>
-        <p class="muted">Предмет: {{ c.subject }} • Класс: {{ c.level }} • Статус: {{ c.status }}</p>
-        <router-link class="btn" :to="`/teacher/courses/${c.id}/edit`">Открыть</router-link>
+    <div class="card">
+      <h3>Создать новый курс</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Предмет</label>
+          <select v-model.number="form.subject_id" class="form-input">
+            <option :value="0">Выберите предмет</option>
+            <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Класс</label>
+          <select v-model.number="form.level_id" class="form-input">
+            <option :value="0">Выберите класс</option>
+            <option v-for="l in levels" :key="l.id" :value="l.id">{{ l.number }} класс</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <button class="btn-create" @click="createCourse">Создать курс</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="courses-grid">
+      <div class="course-card" v-for="c in rows" :key="c.id">
+        <div class="course-header">
+          <h3>{{ c.title }}</h3>
+        </div>
+        <div class="course-info">
+          <div class="info-item">
+            <span class="info-label">Предмет:</span>
+            <span class="info-value">{{ c.subject }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Класс:</span>
+            <span class="info-value">{{ c.level }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Статус:</span>
+            <span class="info-value">{{ c.status }}</span>
+          </div>
+        </div>
+        <router-link class="btn-open" :to="`/teacher/courses/${c.id}/edit`">
+          Открыть курс
+        </router-link>
       </div>
     </div>
 
@@ -51,13 +81,202 @@ onMounted(async ()=>{ await Promise.all([loadSubjects(), loadLevels(), load()]) 
 </script>
 
 <style scoped>
-.card{padding:12px;border:1px solid #eee;border-radius:8px}
-.quick{display:flex;gap:8px;margin-bottom:12px}
-.inp{padding:6px;border:1px solid #ddd;border-radius:6px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
-.course{border:1px solid #eee;border-radius:8px;padding:10px}
-.btn{padding:6px 10px;border:1px solid #ddd;border-radius:6px;background:#fff;text-decoration:none;cursor:pointer}
-.btn.primary{border-color:#0a4ea6;color:#0a4ea6}
-.muted{color:#666}
-.error{color:#b00020}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #212121;
+  margin: 0;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 32px;
+}
+
+.card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #212121;
+  margin: 0 0 20px 0;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 16px;
+  align-items: end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #424242;
+  margin: 0;
+}
+
+.form-input {
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s;
+  background: #f8f9fa;
+  color: #212121;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #2196f3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+  background: #fff;
+}
+
+.btn-create {
+  padding: 12px 24px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-create:hover {
+  background: #1976d2;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.btn-create:active {
+  transform: translateY(0);
+}
+
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.course-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.course-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.course-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #212121;
+  margin: 0;
+}
+
+.course-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-item {
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.info-label {
+  color: #757575;
+  font-weight: 500;
+}
+
+.info-value {
+  color: #212121;
+  font-weight: 600;
+}
+
+.btn-open {
+  display: inline-block;
+  padding: 10px 20px;
+  background: transparent;
+  color: #2196f3;
+  border: 1px solid #2196f3;
+  border-radius: 8px;
+  text-decoration: none;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-open:hover {
+  background: #2196f3;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.error {
+  color: #d32f2f;
+  background: #ffebee;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+  border-left: 4px solid #d32f2f;
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .page-header h2 {
+    font-size: 24px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .courses-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
