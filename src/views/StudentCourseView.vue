@@ -26,17 +26,41 @@
   <p v-else class="muted">Загрузка…</p>
 </template>
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import api from '../utils/api'
+import { useBreadcrumb } from '../composables/useBreadcrumb'
+
 const route = useRoute()
 const course = ref<any|null>(null)
 const error = ref('')
+const { setBreadcrumb } = useBreadcrumb()
+
 async function load() {
-  try { const { data } = await api.get(`/student/courses/${route.params.id}`)
-    course.value = data }
-  catch (e:any) { error.value = e?.data?.message || e?.message || 'Не удалось загрузить курс' } }
+  try {
+    const { data } = await api.get(`/student/courses/${route.params.id}`)
+    course.value = data
+
+    // Обновляем breadcrumb с названием курса
+    if (data && data.title) {
+      setBreadcrumb(route.path, {
+        label: data.title,
+        icon: '📖'
+      })
+    }
+  } catch (e:any) {
+    error.value = e?.data?.message || e?.message || 'Не удалось загрузить курс'
+  }
+}
+
 onMounted(load)
+
+// Следим за изменениями route.params.id
+watch(() => route.params.id, () => {
+  if (route.params.id) {
+    load()
+  }
+})
 </script>
 
 <style scoped>

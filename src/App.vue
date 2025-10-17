@@ -57,6 +57,9 @@
       </div>
     </header>
 
+    <!-- Breadcrumbs -->
+    <AppBreadcrumbs v-if="isAuth" />
+
     <!-- Main Layout -->
     <div class="app-layout">
       <!-- Sidebar (только для admin/teacher) -->
@@ -123,6 +126,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
+import AppBreadcrumbs from './components/AppBreadcrumbs.vue'
 
 const auth = useAuthStore()
 const router = useRouter()

@@ -555,9 +555,11 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../utils/api'
 import draggable from 'vuedraggable'
+import { useBreadcrumb } from '../composables/useBreadcrumb'
 
 const route = useRoute()
 const id = Number(route.params.id)
+const { setBreadcrumb } = useBreadcrumb()
 
 
 
@@ -632,6 +634,15 @@ const canPublish = computed(() => {
 async function loadCourse(){
   const { data } = await api.get(`/teacher/courses/${id}`)
   course.value = data
+
+  // Обновляем breadcrumb с названием курса
+  if (data && data.title) {
+    setBreadcrumb(route.path, {
+      label: data.title,
+      icon: '📖'
+    })
+  }
+
   if (!activeModuleId.value && data.modules?.length) activeModuleId.value = data.modules[0].id
   chapters.value = []
   paragraphsByChapter.value = {}
