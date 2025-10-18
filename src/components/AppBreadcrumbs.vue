@@ -33,7 +33,7 @@ import { useRoute } from 'vue-router'
 import { useBreadcrumb } from '../composables/useBreadcrumb'
 
 const route = useRoute()
-const { getBreadcrumb } = useBreadcrumb()
+const { getBreadcrumb, dynamicBreadcrumbs } = useBreadcrumb()
 
 interface Breadcrumb {
   label: string
@@ -47,21 +47,58 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
   // Получаем все matched routes (включая родительские)
   const matched = route.matched.filter(r => r.meta && r.meta.breadcrumb)
 
+  // console.log('=== BREADCRUMBS DEBUG ===')
+  // console.log('Current route path:', route.path)
+  // console.log('Dynamic breadcrumbs:', Array.from(dynamicBreadcrumbs.value.entries()))
+
   matched.forEach((record) => {
     const meta = record.meta
 
-    // Проверяем, есть ли динамический breadcrumb для этого пути
-    const dynamicCrumb = getBreadcrumb(route.path)
-
-    // Если есть динамический breadcrumb, используем его
-    if (dynamicCrumb && record.path === route.path) {
-      crumbs.push(dynamicCrumb)
-      return
-    }
-
     // Если breadcrumb - это массив (иерархия)
     if (Array.isArray(meta.breadcrumb)) {
-      meta.breadcrumb.forEach((bc: any) => {
+      const breadcrumbArray = meta.breadcrumb as any[]
+      breadcrumbArray.forEach((bc: any, index: number) => {
+        // Для последнего элемента проверяем динамический breadcrumb текущего пути
+        if (index === breadcrumbArray.length - 1) {
+          const dynamicCrumb = getBreadcrumb(route.path)
+          if (dynamicCrumb) {
+            crumbs.push(dynamicCrumb)
+            return
+          }
+        }
+
+        // Проверяем динамические breadcrumbs для промежуточных путей
+        if (bc.path) {
+          const dynamicCrumb = getBreadcrumb(bc.path)
+          if (dynamicCrumb) {
+            crumbs.push(dynamicCrumb)
+            return
+          }
+        } else if (bc.icon) {
+          // Если нет path, ищем динамический breadcrumb по иконке
+          // Проверяем все сохраненные breadcrumbs
+          const allDynamic = Array.from(dynamicBreadcrumbs.value.entries())
+
+          // Ищем по иконке и типу пути
+          let found = null
+          if (bc.icon === '📖') {
+            // Ищем breadcrumb курса
+            found = allDynamic.find(([path, crumb]) => {
+              return crumb.icon === '📖' && path.startsWith('/student/courses/')
+            })
+          } else if (bc.icon === '📄') {
+            // Ищем breadcrumb параграфа
+            found = allDynamic.find(([path, crumb]) => {
+              return crumb.icon === '📄' && path.startsWith('/student/paragraphs/')
+            })
+          }
+
+          if (found) {
+            crumbs.push(found[1])
+            return
+          }
+        }
+
         crumbs.push(bc)
       })
     }
@@ -74,7 +111,13 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
     }
     // Если breadcrumb - это объект
     else if (typeof meta.breadcrumb === 'object') {
-      crumbs.push(meta.breadcrumb as Breadcrumb)
+      // Проверяем динамический breadcrumb для текущего пути
+      const dynamicCrumb = getBreadcrumb(route.path)
+      if (dynamicCrumb && record.path === route.path) {
+        crumbs.push(dynamicCrumb)
+      } else {
+        crumbs.push(meta.breadcrumb as Breadcrumb)
+      }
     }
     // Если breadcrumb - это строка
     else if (typeof meta.breadcrumb === 'string') {
@@ -84,6 +127,9 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
       })
     }
   })
+
+  // console.log('Final breadcrumbs:', crumbs)
+  // console.log('======================')
 
   return crumbs
 })

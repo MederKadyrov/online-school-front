@@ -48,10 +48,12 @@ import {useRoute, RouterLink} from 'vue-router'
 
 
 import api from '../utils/api'
+import { useBreadcrumb } from '../composables/useBreadcrumb'
 
 const route = useRoute()
+const { setBreadcrumb } = useBreadcrumb()
 
-
+const paragraph = ref<any | null>(null)
 const asg = ref<any | null>(null)
 const my = ref<any | null>(null)
 const answer = ref<{ text: string, file: any | null }>({text: '', file: null})
@@ -72,6 +74,37 @@ function pickFile(e: any) {
 }
 
 async function load() {
+  // Получаем информацию о параграфе для breadcrumbs
+  try {
+    const paragraphInfo = await api.get(`/student/paragraphs/${route.params.paragraphId}`)
+    paragraph.value = paragraphInfo.data
+
+    // Устанавливаем breadcrumb с иерархией
+    if (paragraph.value) {
+      const courseId = paragraph.value.chapter?.module?.course?.id
+      const courseTitle = paragraph.value.chapter?.module?.course?.title || 'Курс'
+      const paragraphTitle = paragraph.value.title || 'Параграф'
+
+      // Сохраняем breadcrumb для страницы курса
+      if (courseId) {
+        setBreadcrumb(`/student/courses/${courseId}`, {
+          label: courseTitle,
+          icon: '📖',
+          path: `/student/courses/${courseId}`
+        })
+      }
+
+      // Устанавливаем breadcrumb для параграфа
+      setBreadcrumb(route.path, {
+        label: paragraphTitle,
+        icon: '📄',
+        path: route.path
+      })
+    }
+  } catch (e: any) {
+    console.error('Не удалось загрузить информацию о параграфе:', e)
+  }
+
   // задания (как было)
   const {data} = await
       api.get(`/student/paragraphs/${route.params.paragraphId}/assignments`)

@@ -73,10 +73,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/StudentParagraphView.vue'),
         meta: {
             auth: true,
-            breadcrumb: (route: any) => ({
-                label: route.params.paragraphTitle || 'Параграф',
-                icon: '📄'
-            })
+            breadcrumb: [
+                { label: 'Мои курсы', icon: '📚', path: '/student/courses' },
+                { label: 'Курс', icon: '📖' },
+                { label: 'Параграф', icon: '📄' }
+            ]
         }
     },
     {
@@ -84,7 +85,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/StudentQuizView.vue'),
         meta: {
             auth: true,
-            breadcrumb: { label: 'Тест', icon: '🧪' }
+            breadcrumb: [
+                { label: 'Мои курсы', icon: '📚', path: '/student/courses' },
+                { label: 'Курс', icon: '📖' },
+                { label: 'Параграф', icon: '📄' },
+                { label: 'Тест', icon: '🧪' }
+            ]
         }
     },
 
