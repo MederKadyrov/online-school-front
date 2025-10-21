@@ -276,10 +276,6 @@
                   <label>Дедлайн</label>
                   <input v-model="asg.form.due_at" type="datetime-local" class="inp small" />
                 </div>
-                <div>
-                  <label>Макс. баллов</label>
-                  <input v-model.number="asg.form.max_points" type="number" min="1" class="inp small" />
-                </div>
               </div>
 
 
@@ -342,7 +338,7 @@
               <h5>Отправки студентов</h5>
               <button class="btn xs" @click="loadSubmissions">Обновить</button>
               <table class="tbl small" v-if="asg.submissions.length">
-                <thead><tr><th>Студент</th><th>Дата</th><th>Файл</th><th>Балл</th><th>Оценка</th><th></th></tr></thead>
+                <thead><tr><th>Студент</th><th>Дата</th><th>Файл</th><th>Оценка</th><th></th></tr></thead>
                 <tbody>
                 <tr v-for="s in asg.submissions" :key="s.id">
                   <td>{{ s.student?.name }}</td>
@@ -351,8 +347,15 @@
                     <a v-if="s.file_path" :href="storageUrl(s.file_path)" target="_blank">Скачать</a>
                     <span v-else class="muted">нет</span>
                   </td>
-                  <td><input v-model.number="s._score" type="number" min="0" class="inp tiny" /></td>
-                  <td>{{ s.grade_5 ?? '-' }}</td>
+                  <td>
+                    <select v-model.number="s._grade" class="inp tiny">
+                      <option :value="null">—</option>
+                      <option :value="2">2</option>
+                      <option :value="3">3</option>
+                      <option :value="4">4</option>
+                      <option :value="5">5</option>
+                    </select>
+                  </td>
                   <td><button class="btn xs" @click="gradeSubmission(s)">Оценить</button></td>
                 </tr>
                 </tbody>
@@ -362,15 +365,17 @@
           </div>
         </div>
       </div>
-
-      <!--      -->
+    </div>
 
 <!--   Модалка теста   -->
-      <!-- Quiz modal -->
-      <div v-if="quiz.open" class="res-panel">
-        <div class="res-body">
-          <button class="close" @click="closeQuiz">×</button>
-          <h4>Тест: {{ quiz.item?.title || 'Новый' }}</h4>
+    <!-- Quiz modal -->
+    <div v-if="quiz.open" class="modal-overlay" @click="closeQuiz">
+      <div class="modal-content modal-large" @click.stop>
+        <div class="modal-header">
+          <h3>📝 Тест: {{ quiz.item?.title || 'Новый' }}</h3>
+          <button class="btn-close" @click="closeQuiz">×</button>
+        </div>
+        <div class="modal-body">
 
           <div class="grid2">
             <!-- Левая колонка: карточка теста -->
@@ -541,8 +546,6 @@
           </div>
         </div>
       </div>
-
-      <!--      -->
     </div>
 
     <!-- Сообщение об ошибке ВНУТРИ общего контейнера -->
@@ -598,7 +601,7 @@ const editParagraphDesc = ref('')
 
 const asg = ref<any>({
   open:false, paragraph:null, item:null,
-  form:{ title:'', instructions:'', due_at:'', max_points:100 },
+  form:{ title:'', instructions:'', due_at:'' },
   file:null, uploading:false, saving:false, err:'', msg:'',
   submissions: []
 })
@@ -862,16 +865,19 @@ function pickAsgFile(e:any) {
 async function loadSubmissions(){
   if (!asg.value.item?.id) { asg.value.err='Сперва сохраните задание'; return }
   const { data } = await api.get(`/teacher/assignments/${asg.value.item.id}/submissions`)
-  // подготовим поле _score для ввода
-  asg.value.submissions = data.map((s:any)=>({...s, _score: s.score ?? 0}))
+  // подготовим поле _grade для ввода
+  asg.value.submissions = data.map((s:any)=>({...s, _grade: s.grade_5 ?? null}))
 }
 
 async function gradeSubmission(s:any){
   if (!asg.value.item) return
+  if (s._grade === null || s._grade === undefined) {
+    alert('Выберите оценку')
+    return
+  }
   try{
-    const { data } = await api.put(`/teacher/submissions/${s.id}/grade`, { score: s._score, status: 'returned' })
-    s.score = s._score
-    s.grade_5 = data.grade_5
+    await api.put(`/teacher/submissions/${s.id}/grade`, { grade_5: s._grade, status: 'returned' })
+    s.grade_5 = s._grade
   }catch(e:any){
     alert(e?.data?.message || e?.message)
   }
@@ -896,7 +902,6 @@ async function createAndPublishAssignment() {
       title: asg.value.form.title,
       instructions: asg.value.form.instructions || null,
       due_at: asg.value.form.due_at || null,
-      max_points: asg.value.form.max_points || 100,
     }
     if (attachments_path) payload.attachments_path = attachments_path
 
@@ -926,7 +931,7 @@ async function openAssignment(ch:any, p:any) {
     open:true,
     paragraph:p,
     item:null,
-    form:{ title:'', instructions:'', due_at:'', max_points:100 },
+    form:{ title:'', instructions:'', due_at:'' },
     file:null, saving:false, err:'', msg:'', submissions:[]
   }
 
@@ -939,7 +944,6 @@ async function openAssignment(ch:any, p:any) {
         title: data.title || '',
         instructions: data.instructions || '',
         due_at: data.due_at ? data.due_at.slice(0,16) : '', // для input datetime-local
-        max_points: data.max_points || 100,
       }
     }
   } catch (e:any) {
@@ -965,7 +969,6 @@ async function saveAssignment() {
       title: asg.value.form.title,
       instructions: asg.value.form.instructions || null,
       due_at: asg.value.form.due_at || null,
-      max_points: asg.value.form.max_points || 100,
       attachments_path
     }
 
@@ -995,7 +998,6 @@ async function removeAssignment() {
         title: asg.value.item.title || '',
         instructions: asg.value.item.instructions || '',
         due_at: asg.value.item.due_at ? asg.value.item.due_at.slice(0,16) : '',
-        max_points: asg.value.item.max_points || 100,
       }
       // индикатор: зелёный только если опубликовано
       if (asg.value.paragraph) {
@@ -1004,7 +1006,7 @@ async function removeAssignment() {
       }
     } else {
       // удалено — очистим форму
-      asg.value.form = { title:'', instructions:'', due_at:'', max_points:100 }
+      asg.value.form = { title:'', instructions:'', due_at:'' }
       if (asg.value.paragraph) {
         asg.value.paragraph.has_assignment = false
         asg.value.paragraph.assignment_status = null

@@ -68,7 +68,6 @@
             <th>Задание</th>
             <th>Дата отправки</th>
             <th>Статус</th>
-            <th>Балл</th>
             <th>Оценка</th>
             <th>Действия</th>
           </tr>
@@ -85,7 +84,6 @@
                 {{ statusLabel(s.status) }}
               </span>
             </td>
-            <td>{{ s.score ?? '—' }}</td>
             <td>{{ s.grade_5 ?? '—' }}</td>
             <td class="actions-cell">
               <button class="btn xs" @click="openGradeModal(s)" title="Проверить">
@@ -135,8 +133,14 @@
         <div class="grade-form">
           <div class="form-row">
             <div class="form-item">
-              <label>Балл <span class="req">*</span></label>
-              <input v-model.number="gradeModal.form.score" type="number" min="0" class="inp" />
+              <label>Оценка <span class="req">*</span></label>
+              <select v-model.number="gradeModal.form.grade_5" class="inp">
+                <option :value="null">Не выбрано</option>
+                <option :value="2">2 (неудовлетворительно)</option>
+                <option :value="3">3 (удовлетворительно)</option>
+                <option :value="4">4 (хорошо)</option>
+                <option :value="5">5 (отлично)</option>
+              </select>
             </div>
           </div>
 
@@ -184,7 +188,7 @@ const gradeModal = ref({
   open: false,
   submission: null as any,
   form: {
-    score: 0,
+    grade_5: null as number | null,
     teacher_comment: ''
   },
   saving: false,
@@ -307,7 +311,7 @@ function openGradeModal(submission: any) {
   gradeModal.value.open = true
   gradeModal.value.submission = submission
   gradeModal.value.form = {
-    score: submission.score ?? 0,
+    grade_5: submission.grade_5 ?? null,
     teacher_comment: submission.teacher_comment || ''
   }
   gradeModal.value.err = ''
@@ -322,13 +326,18 @@ function closeGradeModal() {
 async function submitGrade() {
   if (!gradeModal.value.submission) return
 
+  if (gradeModal.value.form.grade_5 === null || gradeModal.value.form.grade_5 === undefined) {
+    gradeModal.value.err = 'Выберите оценку'
+    return
+  }
+
   gradeModal.value.saving = true
   gradeModal.value.err = ''
   gradeModal.value.msg = ''
 
   try {
     await api.put(`/teacher/submissions/${gradeModal.value.submission.id}/grade`, {
-      score: gradeModal.value.form.score,
+      grade_5: gradeModal.value.form.grade_5,
       teacher_comment: gradeModal.value.form.teacher_comment,
       status: 'returned'
     })
@@ -338,7 +347,7 @@ async function submitGrade() {
     // Обновим submission в списке
     const idx = submissions.value.findIndex(s => s.id === gradeModal.value.submission.id)
     if (idx !== -1) {
-      submissions.value[idx].score = gradeModal.value.form.score
+      submissions.value[idx].grade_5 = gradeModal.value.form.grade_5
       submissions.value[idx].teacher_comment = gradeModal.value.form.teacher_comment
       submissions.value[idx].status = 'returned'
     }

@@ -21,19 +21,6 @@
           <span class="logo-text">Школа</span>
         </RouterLink>
 
-        <!-- Student Navigation (horizontal) -->
-        <nav v-if="isAuth && !hasSidebar" class="student-nav">
-          <RouterLink
-            v-for="item in studentMenuItems"
-            :key="item.path"
-            :to="item.path"
-            class="student-nav-link"
-          >
-            <span class="student-nav-icon">{{ item.icon }}</span>
-            <span class="student-nav-label">{{ item.label }}</span>
-          </RouterLink>
-        </nav>
-
         <div class="header-spacer"></div>
 
         <!-- Guest Navigation (horizontal) -->
@@ -151,7 +138,7 @@ const userRoleLabel = computed(() => {
 
 const hasSidebar = computed(() => {
   const role = userRole.value
-  return role === 'admin' || role === 'teacher'
+  return role === 'admin' || role === 'teacher' || role === 'student'
 })
 
 // Menu items by role
@@ -174,21 +161,16 @@ const menuItems = computed(() => {
       { path: '/teacher/courses', icon: '📚', label: 'Курсы' },
       { path: '/teacher/submissions', icon: '✏️', label: 'Проверка работ' },
       { path: '/teacher/journal', icon: '📖', label: 'Журнал' },
+      { path: '/teacher/profile', icon: '👤', label: 'Профиль' },
     ]
   }
 
-  return []
-})
-
-// Student menu items (for horizontal navigation)
-const studentMenuItems = computed(() => {
-  const role = userRole.value
-
   if (role === 'student') {
     return [
-      { path: '/student/courses', icon: '📚', label: 'Курсы' },
-      { path: '/student/journal', icon: '📖', label: 'Журнал' },
-      { path: '/student/grades', icon: '📊', label: 'Оценки' },
+      { path: '/student/courses', icon: '📚', label: 'Мои курсы' },
+      { path: '/student/journal', icon: '📊', label: 'Журнал оценок' },
+      { path: '/student/grades', icon: '⭐', label: 'Успеваемость' },
+      { path: '/student/profile', icon: '👤', label: 'Профиль' },
     ]
   }
 
@@ -390,46 +372,6 @@ body {
 
 .btn-logout:hover {
   background: #f5f5f5;
-}
-
-/* Student Navigation (horizontal) */
-.student-nav {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 24px;
-}
-
-.student-nav-link {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  text-decoration: none;
-  color: #424242;
-  border-radius: 8px;
-  transition: all 0.2s;
-  font-weight: 500;
-  font-size: 14px;
-}
-
-.student-nav-link:hover {
-  background: #f5f5f5;
-  color: #212121;
-}
-
-.student-nav-link.router-link-active {
-  background: rgba(33, 150, 243, 0.1);
-  color: #2196f3;
-  font-weight: 600;
-}
-
-.student-nav-icon {
-  font-size: 18px;
-}
-
-.student-nav-label {
-  white-space: nowrap;
 }
 
 /* Guest Navigation (horizontal) */
@@ -755,24 +697,6 @@ body {
 
   .app-main {
     padding: 16px 12px;
-  }
-
-  /* Hide student nav labels on small screens */
-  .student-nav {
-    gap: 4px;
-    margin-left: 12px;
-  }
-
-  .student-nav-link {
-    padding: 8px 12px;
-  }
-
-  .student-nav-label {
-    display: none;
-  }
-
-  .student-nav-icon {
-    font-size: 20px;
   }
 
   /* Hide guest nav labels on small screens */

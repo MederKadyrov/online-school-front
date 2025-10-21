@@ -233,7 +233,7 @@
             <span class="label">Название:</span>
             <span class="value">{{ gradeDetails.title }}</span>
           </div>
-          <div class="detail-row">
+          <div v-if="gradeDetails.type === 'QuizAttempt'" class="detail-row">
             <span class="label">Баллы:</span>
             <span class="value">{{ gradeDetails.score }} / {{ gradeDetails.max_points }}</span>
           </div>

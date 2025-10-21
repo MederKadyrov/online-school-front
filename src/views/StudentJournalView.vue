@@ -1,11 +1,15 @@
 <template>
   <div class="student-journal-view">
-    <h1>Мои оценки</h1>
+    <!-- Заголовок -->
+    <div class="page-header">
+      <h1>📊 Мои оценки</h1>
+      <p class="page-subtitle">Отслеживайте свою успеваемость по курсам</p>
+    </div>
 
     <!-- Фильтры -->
-    <div class="filters">
+    <div class="filters-card">
       <div class="filter-group">
-        <label>Курс:</label>
+        <label>📚 Курс:</label>
         <select v-model="filters.course_id" @change="onCourseChange">
           <option value="">Выберите курс</option>
           <option v-for="course in courses" :key="course.id" :value="course.id">
@@ -15,7 +19,7 @@
       </div>
 
       <div class="filter-group">
-        <label>Модуль:</label>
+        <label>📖 Модуль:</label>
         <select v-model="filters.module_id" @change="loadJournal" :disabled="!filters.course_id">
           <option value="all">Все модули</option>
           <option v-for="module in modules" :key="module.id" :value="module.id">
@@ -26,22 +30,35 @@
     </div>
 
     <!-- Статистика -->
-    <div v-if="journalData.total_grades !== undefined" class="summary">
-      <div class="summary-item">
-        <span>Всего оценок:</span>
-        <strong>{{ journalData.total_grades }}</strong>
+    <div v-if="journalData.total_grades !== undefined" class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-content">
+          <span class="stat-label">Всего оценок</span>
+          <strong class="stat-value">{{ journalData.total_grades }}</strong>
+        </div>
       </div>
-      <div class="summary-item">
-        <span>Средний балл:</span>
-        <strong>{{ journalData.average?.toFixed(2) || 'N/A' }}</strong>
+      <div class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-content">
+          <span class="stat-label">Средний балл</span>
+          <strong class="stat-value" :class="getAverageClass(journalData.average)">
+            {{ journalData.average?.toFixed(2) || 'N/A' }}
+          </strong>
+        </div>
       </div>
     </div>
 
     <!-- Таблица оценок -->
-    <div v-if="loading" class="loading">Загрузка...</div>
+    <div v-if="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Загрузка оценок...</p>
+    </div>
 
-    <div v-else-if="filters.course_id && journalData.paragraphs?.length" class="journal-table-wrapper">
-      <table class="journal-table">
+    <div v-else-if="filters.course_id && journalData.paragraphs?.length" class="table-container">
+      <div class="scroll-hint">← Прокрутите таблицу горизонтально →</div>
+      <div class="journal-table-wrapper">
+        <table class="journal-table">
         <thead>
           <tr class="header-row-1">
             <template v-for="module in journalData.modules" :key="module.module_id">
@@ -82,7 +99,7 @@
                     getGradeCellClass(journalData.grades_by_paragraph[paragraph.paragraph_id]?.assignment?.grade),
                     getModuleCellClass(module.module_number)
                   ]"
-                  @click="showGradeDetails(journalData.grades_by_paragraph[paragraph.paragraph_id]?.assignment)"
+                  @click="showGradeDetails(journalData.grades_by_paragraph[paragraph.paragraph_id]?.assignment, 'assignment')"
                   :title="getGradeTitle(journalData.grades_by_paragraph[paragraph.paragraph_id]?.assignment)"
                 >
                   {{ journalData.grades_by_paragraph[paragraph.paragraph_id]?.assignment?.grade || '—' }}
@@ -93,7 +110,7 @@
                     getGradeCellClass(journalData.grades_by_paragraph[paragraph.paragraph_id]?.quiz?.grade),
                     getModuleCellClass(module.module_number)
                   ]"
-                  @click="showGradeDetails(journalData.grades_by_paragraph[paragraph.paragraph_id]?.quiz)"
+                  @click="showGradeDetails(journalData.grades_by_paragraph[paragraph.paragraph_id]?.quiz, 'quiz')"
                   :title="getGradeTitle(journalData.grades_by_paragraph[paragraph.paragraph_id]?.quiz)"
                 >
                   {{ journalData.grades_by_paragraph[paragraph.paragraph_id]?.quiz?.grade || '—' }}
@@ -116,14 +133,19 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
-    <div v-else-if="filters.course_id" class="no-data">
-      Нет оценок по выбранному курсу
+    <div v-else-if="filters.course_id" class="empty-state">
+      <div class="empty-icon">📭</div>
+      <h3>Нет оценок</h3>
+      <p>По выбранному курсу пока нет оценок</p>
     </div>
 
-    <div v-else class="no-data">
-      Выберите курс для просмотра оценок
+    <div v-else class="empty-state">
+      <div class="empty-icon">📚</div>
+      <h3>Выберите курс</h3>
+      <p>Чтобы посмотреть свои оценки, выберите курс из списка выше</p>
     </div>
 
     <!-- Модалка с деталями оценки -->
@@ -136,7 +158,7 @@
             <span class="label">Тип:</span>
             <span class="value">{{ gradeDetails.title }}</span>
           </div>
-          <div class="detail-row">
+          <div v-if="gradeDetails.type === 'QuizAttempt'" class="detail-row">
             <span class="label">Баллы:</span>
             <span class="value">{{ gradeDetails.score }} / {{ gradeDetails.max_points }}</span>
           </div>
@@ -204,6 +226,7 @@ interface GradeInfo {
   title: string
   graded_at: string
   teacher_comment?: string | null
+  type?: string
 }
 
 interface ModuleGradeInfo {
@@ -317,9 +340,12 @@ async function loadJournal() {
   }
 }
 
-function showGradeDetails(gradeInfo: GradeInfo | null | undefined) {
+function showGradeDetails(gradeInfo: GradeInfo | null | undefined, type: 'assignment' | 'quiz' = 'assignment') {
   if (gradeInfo) {
-    gradeDetails.value = gradeInfo
+    gradeDetails.value = {
+      ...gradeInfo,
+      type: type === 'quiz' ? 'QuizAttempt' : 'AssignmentSubmission'
+    }
     showModal.value = true
   }
 }
@@ -389,6 +415,14 @@ function formatDate(dateString: string): string {
     minute: '2-digit'
   })
 }
+
+function getAverageClass(average: number | undefined): string {
+  if (!average) return ''
+  if (average >= 4.5) return 'excellent'
+  if (average >= 3.5) return 'good'
+  if (average >= 2.5) return 'satisfactory'
+  return 'poor'
+}
 </script>
 
 <style scoped>
@@ -398,101 +432,219 @@ function formatDate(dateString: string): string {
   margin: 0 auto;
 }
 
-h1 {
-  margin-bottom: 20px;
-  color: #2c3e50;
+/* Заголовок страницы */
+.page-header {
+  margin-bottom: 24px;
 }
 
-.filters {
+.page-header h1 {
+  font-size: 32px;
+  color: #213547;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+}
+
+.page-subtitle {
+  color: #6b7280;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Фильтры */
+.filters-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
   display: flex;
-  gap: 15px;
-  margin-bottom: 20px;
+  gap: 20px;
   flex-wrap: wrap;
-  align-items: flex-end;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
+  flex: 1;
+  min-width: 250px;
 }
 
 .filter-group label {
   font-weight: 600;
   font-size: 14px;
-  color: #2c3e50;
+  color: #374151;
 }
 
 .filter-group select {
-  padding: 10px 14px;
-  border: 2px solid #3498db;
-  border-radius: 6px;
-  min-width: 250px;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
   font-size: 14px;
-  transition: all 0.3s;
+  background: white;
+  transition: all 0.2s;
+  cursor: pointer;
+  color: #555555;
+}
+
+.filter-group select:hover:not(:disabled) {
+  border-color: #667eea;
 }
 
 .filter-group select:focus {
   outline: none;
-  border-color: #2980b9;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .filter-group select:disabled {
-  background-color: #ecf0f1;
+  background-color: #f9fafb;
   cursor: not-allowed;
-  border-color: #bdc3c7;
+  border-color: #e5e7eb;
+  color: #9ca3af;
 }
 
-.summary {
-  display: flex;
-  gap: 40px;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* Статистика */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: white;
+  padding: 24px;
   border-radius: 12px;
-  margin-bottom: 25px;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.3s;
 }
 
-.summary-item {
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.stat-icon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.stat-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
-.summary-item span {
+.stat-label {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
+  color: #6b7280;
   font-weight: 500;
 }
 
-.summary-item strong {
-  font-size: 32px;
-  color: white;
+.stat-value {
+  font-size: 36px;
   font-weight: 700;
+  color: #213547;
 }
 
-.loading, .no-data {
+.stat-value.excellent {
+  color: #22c55e;
+}
+
+.stat-value.good {
+  color: #3b82f6;
+}
+
+.stat-value.satisfactory {
+  color: #f59e0b;
+}
+
+.stat-value.poor {
+  color: #ef4444;
+}
+
+/* Состояние загрузки */
+.loading-state {
   text-align: center;
-  padding: 60px;
-  color: #7f8c8d;
-  font-size: 18px;
-  background-color: #ecf0f1;
-  border-radius: 8px;
+  padding: 80px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: #6b7280;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Контейнер таблицы */
+.table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.scroll-hint {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-align: center;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .journal-table-wrapper {
   overflow-x: auto;
+  overflow-y: auto;
   position: relative;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  border-radius: 8px;
+  max-height: 70vh;
+  min-height: 400px;
+}
+
+/* Кастомный скроллбар */
+.journal-table-wrapper::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.journal-table-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.journal-table-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 6px;
+}
+
+.journal-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .journal-table {
   width: 100%;
   border-collapse: collapse;
   background-color: white;
-  color: #2c3e50;
+  color: #213547;
   font-size: 14px;
 }
 
@@ -500,12 +652,12 @@ h1 {
 .journal-table td {
   padding: 12px;
   text-align: center;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e5e7eb;
 }
 
 .journal-table th {
-  background-color: #34495e;
-  color: white;
+  background-color: #f8fafc;
+  color: #1e293b;
   font-weight: 600;
   position: sticky;
   top: 0;
@@ -514,10 +666,10 @@ h1 {
 
 /* Заголовки модулей */
 .header-row-1 th {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   font-size: 15px;
   font-weight: 700;
-  padding: 15px;
+  padding: 16px;
+  color: white;
 }
 
 .module-0 {
@@ -538,37 +690,39 @@ h1 {
 
 /* Заголовки параграфов */
 .paragraph-header {
-  background-color: #ecf0f1;
+  background-color: #f1f5f9;
   font-size: 13px;
   font-weight: 600;
-  color: #2c3e50;
+  color: #1e293b;
   white-space: nowrap;
 }
 
 /* Подзаголовки З/Т */
 .header-row-3 .subheader {
-  background-color: #bdc3c7;
+  background-color: #e2e8f0;
   font-size: 12px;
   font-weight: 700;
-  width: 45px;
-  padding: 8px;
-  color: #2c3e50;
+  width: 50px;
+  padding: 10px;
+  color: #1e293b;
 }
 
 /* Ячейки с оценками */
 .grade-cell {
   cursor: pointer;
   font-weight: 700;
-  font-size: 16px;
-  min-width: 45px;
-  padding: 12px 8px;
+  font-size: 18px;
+  min-width: 50px;
+  padding: 14px 10px;
   transition: all 0.2s;
+  position: relative;
 }
 
 .grade-cell:hover {
-  transform: scale(1.15);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: scale(1.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
   z-index: 20;
+  border-radius: 8px;
 }
 
 /* Фоны ячеек по модулям */
@@ -762,5 +916,131 @@ h1 {
 .close-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Пустое состояние */
+.empty-state {
+  text-align: center;
+  padding: 80px 40px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.empty-icon {
+  font-size: 72px;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.empty-state h3 {
+  font-size: 24px;
+  color: #213547;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+}
+
+.empty-state p {
+  color: #6b7280;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .student-journal-view {
+    padding: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 24px;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+  }
+
+  .filters-card {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .filter-group {
+    min-width: 100%;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    padding: 20px;
+  }
+
+  .stat-icon {
+    font-size: 40px;
+  }
+
+  .stat-value {
+    font-size: 28px;
+  }
+
+  .scroll-hint {
+    font-size: 12px;
+    padding: 10px;
+  }
+
+  .journal-table th,
+  .journal-table td {
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  .grade-cell {
+    font-size: 16px;
+    padding: 10px 6px;
+    min-width: 45px;
+  }
+
+  .header-row-1 th {
+    font-size: 13px;
+    padding: 12px;
+  }
+
+  .empty-state {
+    padding: 60px 20px;
+  }
+
+  .empty-icon {
+    font-size: 56px;
+  }
+
+  .empty-state h3 {
+    font-size: 20px;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+  }
+
+  .modal-content {
+    padding: 24px;
+  }
+}
+
+@media print {
+  .filters-card,
+  .scroll-hint,
+  .modal-overlay {
+    display: none;
+  }
+
+  .table-container {
+    box-shadow: none;
+  }
+
+  .journal-table-wrapper {
+    overflow: visible;
+  }
 }
 </style>

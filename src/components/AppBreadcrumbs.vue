@@ -47,10 +47,6 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
   // Получаем все matched routes (включая родительские)
   const matched = route.matched.filter(r => r.meta && r.meta.breadcrumb)
 
-  // console.log('=== BREADCRUMBS DEBUG ===')
-  // console.log('Current route path:', route.path)
-  // console.log('Dynamic breadcrumbs:', Array.from(dynamicBreadcrumbs.value.entries()))
-
   matched.forEach((record) => {
     const meta = record.meta
 
@@ -127,9 +123,6 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
       })
     }
   })
-
-  // console.log('Final breadcrumbs:', crumbs)
-  // console.log('======================')
 
   return crumbs
 })

@@ -70,7 +70,6 @@
             <th>Задание</th>
             <th>Дата отправки</th>
             <th>Статус</th>
-            <th>Балл</th>
             <th>Оценка</th>
             <th>Действия</th>
           </tr>
@@ -88,7 +87,6 @@
                 {{ statusLabel(s.status) }}
               </span>
             </td>
-            <td>{{ s.score ?? '—' }}</td>
             <td>{{ s.grade_5 ?? '—' }}</td>
             <td class="actions-cell">
               <button class="btn xs" @click="openViewModal(s)" title="Просмотр">
@@ -145,12 +143,8 @@
         <div v-if="viewModal.submission?.status === 'returned'" class="grading-info">
           <div class="grade-row">
             <div>
-              <label>Балл:</label>
-              <p class="grade-value">{{ viewModal.submission.score ?? '—' }}</p>
-            </div>
-            <div>
               <label>Оценка:</label>
-              <p class="grade-value">{{ viewModal.submission.grade_5 ?? '—' }} / 5</p>
+              <p class="grade-value">{{ viewModal.submission.grade_5 ?? '—' }}</p>
             </div>
           </div>
 
@@ -572,9 +566,6 @@ h2 {
 }
 
 .grade-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
   margin-bottom: 16px;
 }
 

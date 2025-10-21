@@ -69,6 +69,14 @@ const routes: RouteRecordRaw[] = [
         }
     },
     {
+        path: '/student/profile',
+        component: () => import('../views/StudentProfileView.vue'),
+        meta: {
+            auth: true,
+            breadcrumb: { label: 'Мой профиль', icon: '👤' }
+        }
+    },
+    {
         path: '/student/paragraphs/:paragraphId',
         component: () => import('../views/StudentParagraphView.vue'),
         meta: {
@@ -250,6 +258,14 @@ const routes: RouteRecordRaw[] = [
         meta: {
             auth: true,
             breadcrumb: { label: 'Журнал', icon: '📖' }
+        }
+    },
+    {
+        path: '/teacher/profile',
+        component: () => import('../views/TeacherProfileView.vue'),
+        meta: {
+            auth: true,
+            breadcrumb: { label: 'Мой профиль', icon: '👤' }
         }
     },
 
