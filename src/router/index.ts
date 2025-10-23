@@ -278,6 +278,14 @@ const routes: RouteRecordRaw[] = [
             breadcrumb: { label: 'Журнал', icon: '📖' }
         }
     },
+    {
+        path: '/student/assignments',
+        component: () => import('../views/StudentAssignmentsView.vue'),
+        meta: {
+            auth: true,
+            breadcrumb: { label: 'Мои задания', icon: '📝' }
+        }
+    },
 
 ]
 

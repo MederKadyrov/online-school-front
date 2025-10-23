@@ -336,6 +336,13 @@ async function load() {
   } catch (e: any) {
     quizErr.value = e?.data?.message || e?.message || 'Не удалось загрузить тест'
   }
+
+  // Update progress
+  try {
+    await api.post(`/student/paragraphs/${route.params.paragraphId}/progress`)
+  } catch (e: any) {
+    console.error('Failed to update progress:', e)
+  }
 }
 
 async function submit() {
@@ -353,6 +360,13 @@ async function submit() {
 
     my.value = data
     answer.value = { text: '', file: null }
+
+    // Update progress after submitting assignment
+    try {
+      await api.post(`/student/paragraphs/${route.params.paragraphId}/progress`)
+    } catch (e: any) {
+      console.error('Failed to update progress:', e)
+    }
   } catch (e: any) {
     alert('Ошибка отправки: ' + (e?.data?.message || e?.message))
   } finally {

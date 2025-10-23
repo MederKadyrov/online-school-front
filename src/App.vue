@@ -168,6 +168,7 @@ const menuItems = computed(() => {
   if (role === 'student') {
     return [
       { path: '/student/courses', icon: '📚', label: 'Мои курсы' },
+      { path: '/student/assignments', icon: '📝', label: 'Мои задания' },
       { path: '/student/journal', icon: '📊', label: 'Журнал оценок' },
       { path: '/student/grades', icon: '⭐', label: 'Успеваемость' },
       { path: '/student/profile', icon: '👤', label: 'Профиль' },
