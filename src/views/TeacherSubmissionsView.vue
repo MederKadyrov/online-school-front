@@ -10,7 +10,9 @@
           <select v-model="filters.status" class="inp" @change="loadSubmissions">
             <option value="">Все</option>
             <option value="submitted">Отправлено</option>
-            <option value="returned">Проверено</option>
+            <option value="graded">Оценено</option>
+            <option value="returned">Возвращено</option>
+            <option value="needs_fix">Требует доработки</option>
           </select>
         </div>
 
@@ -151,7 +153,7 @@
 
           <div class="modal-actions">
             <button class="btn primary" @click="submitGrade" :disabled="gradeModal.saving">
-              {{ gradeModal.saving ? 'Сохранение...' : 'Оценить и вернуть' }}
+              {{ gradeModal.saving ? 'Сохранение...' : 'Выставить оценку' }}
             </button>
             <button class="btn" @click="closeGradeModal">Отмена</button>
           </div>
@@ -201,7 +203,7 @@ const ungradedCount = computed(() =>
 )
 
 const gradedCount = computed(() =>
-  submissions.value.filter(s => s.status === 'returned').length
+  submissions.value.filter(s => s.status === 'graded' || s.status === 'returned').length
 )
 
 function storageUrl(path: string) {
@@ -223,7 +225,8 @@ function formatDate(dateStr: string | null) {
 function statusLabel(status: string) {
   const labels: Record<string, string> = {
     'submitted': 'Отправлено',
-    'returned': 'Проверено',
+    'graded': 'Оценено',
+    'returned': 'Возвращено',
     'needs_fix': 'Требует доработки'
   }
   return labels[status] || status
@@ -232,7 +235,9 @@ function statusLabel(status: string) {
 function statusClass(status: string) {
   return {
     'status-submitted': status === 'submitted',
-    'status-returned': status === 'returned'
+    'status-graded': status === 'graded',
+    'status-returned': status === 'returned',
+    'status-needs-fix': status === 'needs_fix'
   }
 }
 
@@ -338,8 +343,8 @@ async function submitGrade() {
   try {
     await api.put(`/teacher/submissions/${gradeModal.value.submission.id}/grade`, {
       grade_5: gradeModal.value.form.grade_5,
-      teacher_comment: gradeModal.value.form.teacher_comment,
-      status: 'returned'
+      teacher_comment: gradeModal.value.form.teacher_comment
+      // status не передаем, бэкенд установит 'graded' по умолчанию
     })
 
     gradeModal.value.msg = 'Оценка выставлена'
@@ -349,7 +354,7 @@ async function submitGrade() {
     if (idx !== -1) {
       submissions.value[idx].grade_5 = gradeModal.value.form.grade_5
       submissions.value[idx].teacher_comment = gradeModal.value.form.teacher_comment
-      submissions.value[idx].status = 'returned'
+      submissions.value[idx].status = 'graded' // Теперь статус 'graded' вместо 'returned'
     }
 
     setTimeout(() => {
@@ -504,9 +509,19 @@ h2 {
   color: #92400e;
 }
 
+.status-graded {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
 .status-returned {
-  background: #d1fae5;
-  color: #065f46;
+  background: #bee3f8;
+  color: #2c5282;
+}
+
+.status-needs-fix {
+  background: #feebc8;
+  color: #c05621;
 }
 
 .actions-cell {

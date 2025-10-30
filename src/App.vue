@@ -49,7 +49,7 @@
 
     <!-- Main Layout -->
     <div class="app-layout">
-      <!-- Sidebar (только для admin/teacher) -->
+      <!-- Sidebar -->
       <aside
         v-if="hasSidebar"
         class="app-sidebar"
@@ -148,7 +148,9 @@ const menuItems = computed(() => {
   if (role === 'admin') {
     return [
       { path: '/admin/groups', icon: '🏫', label: 'Группы' },
+      { path: '/admin/students', icon: '👨‍🎓', label: 'Студенты' },
       { path: '/admin/teachers', icon: '👨‍🏫', label: 'Учителя' },
+      { path: '/admin/courses', icon: '📚', label: 'Курсы учителей' },
       { path: '/admin/subjects', icon: '📚', label: 'Предметы' },
       { path: '/admin/submissions', icon: '✏️', label: 'Проверка работ' },
       { path: '/admin/journal', icon: '📖', label: 'Журнал' },

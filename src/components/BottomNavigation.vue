@@ -60,8 +60,9 @@ const navItems = computed(() => {
   if (role === 'admin') {
     return [
       { path: '/admin/groups', icon: '🏫', label: 'Группы' },
+      { path: '/admin/students', icon: '👨‍🎓', label: 'Студенты' },
       { path: '/admin/teachers', icon: '👨‍🏫', label: 'Учителя' },
-      { path: '/admin/subjects', icon: '📚', label: 'Предметы' },
+      { path: '/admin/courses', icon: '📚', label: 'Курсы' },
       { path: '/admin/journal', icon: '📖', label: 'Журнал' },
     ]
   }

@@ -179,6 +179,33 @@ const routes: RouteRecordRaw[] = [
 
     // Admin - Other
     {
+        path: '/admin/students',
+        component: () => import('../views/AdminStudentsView.vue'),
+        meta: {
+            auth: true,
+            breadcrumb: { label: 'Студенты', icon: '👨‍🎓' }
+        }
+    },
+    {
+        path: '/admin/courses',
+        component: () => import('../views/AdminCoursesView.vue'),
+        meta: {
+            auth: true,
+            breadcrumb: { label: 'Курсы учителей', icon: '📚' }
+        }
+    },
+    {
+        path: '/admin/courses/:id',
+        component: () => import('../views/AdminCourseDetailView.vue'),
+        meta: {
+            auth: true,
+            breadcrumb: [
+                { label: 'Курсы учителей', icon: '📚', path: '/admin/courses' },
+                { label: 'Детали курса', icon: '📖' }
+            ]
+        }
+    },
+    {
         path: '/admin/submissions',
         component: () => import('../views/AdminSubmissionsView.vue'),
         meta: {
