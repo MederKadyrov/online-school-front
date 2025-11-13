@@ -796,8 +796,42 @@ function formatDate(dateString: string): string {
   })
 }
 
-function exportJournal() {
-  window.print()
+async function exportJournal() {
+  try {
+    const response = await api.get('/teacher/journal/export', {
+      params: {
+        group_id: filters.value.group_id,
+        course_id: filters.value.course_id,
+        module_id: filters.value.module_id
+      },
+      responseType: 'blob'
+    })
+
+    // Создаем blob URL и скачиваем файл
+    const blob = new Blob([response.data], { type: 'text/csv; charset=utf-8' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+
+    // Извлекаем имя файла из заголовка Content-Disposition или генерируем его
+    const contentDisposition = response.headers['content-disposition']
+    let filename = 'journal.csv'
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '')
+      }
+    }
+
+    link.setAttribute('download', filename)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Ошибка экспорта журнала:', error)
+    alert('Ошибка при экспорте данных')
+  }
 }
 </script>
 
