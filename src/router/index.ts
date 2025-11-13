@@ -60,14 +60,7 @@ const routes: RouteRecordRaw[] = [
             ]
         }
     },
-    {
-        path: '/student/grades',
-        component: StudentGrades,
-        meta: {
-            auth: true,
-            breadcrumb: { label: 'Оценки', icon: '📊' }
-        }
-    },
+    
     {
         path: '/student/profile',
         component: () => import('../views/StudentProfileView.vue'),

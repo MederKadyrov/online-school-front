@@ -73,6 +73,9 @@
               </th>
             </template>
             <th rowspan="3" class="average-col">Средний балл</th>
+            <th rowspan="3" class="final-grade-col">Годовая</th>
+            <th v-if="journalData.course?.has_exam_grades" rowspan="3" class="final-grade-col">Экзамен</th>
+            <th v-if="journalData.course?.has_exam_grades" rowspan="3" class="final-grade-col">Итоговая</th>
           </tr>
           <tr class="header-row-2">
             <template v-for="module in journalData.modules" :key="'para-' + module.module_id">
@@ -136,6 +139,35 @@
             </template>
 
             <td class="average-cell">{{ student.average?.toFixed(2) || 'N/A' }}</td>
+
+            <!-- Годовая оценка -->
+            <td
+              class="final-grade-cell"
+              :class="getGradeCellClass(student.yearly_grade?.grade)"
+              :title="student.yearly_grade?.graded_at ? 'Выставлено: ' + formatDate(student.yearly_grade.graded_at) : ''"
+            >
+              {{ student.yearly_grade?.grade || '—' }}
+            </td>
+
+            <!-- Экзаменационная оценка (только для 9 и 11 классов) -->
+            <td
+              v-if="journalData.course?.has_exam_grades"
+              class="final-grade-cell"
+              :class="getGradeCellClass(student.exam_grade?.grade)"
+              :title="student.exam_grade?.graded_at ? 'Выставлено: ' + formatDate(student.exam_grade.graded_at) : ''"
+            >
+              {{ student.exam_grade?.grade || '—' }}
+            </td>
+
+            <!-- Итоговая оценка (только для 9 и 11 классов) -->
+            <td
+              v-if="journalData.course?.has_exam_grades"
+              class="final-grade-cell"
+              :class="getGradeCellClass(student.final_grade?.grade)"
+              :title="student.final_grade?.graded_at ? 'Выставлено: ' + formatDate(student.final_grade.graded_at) : ''"
+            >
+              {{ student.final_grade?.grade || '—' }}
+            </td>
           </tr>
         </tbody>
       </table>
@@ -300,6 +332,13 @@ interface ModuleGradeInfo {
   graded_at: string | null
 }
 
+interface FinalGradeInfo {
+  id: number
+  grade: number | null
+  graded_at: string | null
+  teacher_comment?: string | null
+}
+
 interface StudentData {
   student_id: number
   student_name: string
@@ -312,6 +351,9 @@ interface StudentData {
   grades_by_module: {
     [module_id: number]: ModuleGradeInfo | null
   }
+  yearly_grade?: FinalGradeInfo | null
+  exam_grade?: FinalGradeInfo | null
+  final_grade?: FinalGradeInfo | null
   average: number
 }
 
@@ -319,6 +361,11 @@ interface JournalData {
   students: StudentData[]
   paragraphs: ParagraphInfo[]
   modules: ModuleInfo[]
+  course?: {
+    id: number
+    level_id: number
+    has_exam_grades: boolean
+  }
   summary?: {
     total_students: number
     total_grades: number
@@ -595,6 +642,8 @@ h1 {
   border: 1px solid #ddd;
   border-radius: 4px;
   min-width: 200px;
+  background-color: #fcfbfb;
+  color: #333;
 }
 
 .filter-group select:disabled {
@@ -833,6 +882,23 @@ h1 {
   font-weight: 700;
   font-size: 14px;
   color: #495057;
+}
+
+/* Финальные оценки (годовая, экзаменационная, итоговая) */
+.final-grade-col {
+  background-color: #fff3cd;
+  font-weight: 700;
+  min-width: 80px;
+  border-left: 2px solid #ffc107;
+  color: #856404;
+}
+
+.final-grade-cell {
+  background-color: #fffbf0;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  border-left: 2px solid #ffc107;
 }
 
 .grade-badge {

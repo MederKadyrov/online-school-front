@@ -172,7 +172,6 @@ const menuItems = computed(() => {
       { path: '/student/courses', icon: '📚', label: 'Мои курсы' },
       { path: '/student/assignments', icon: '📝', label: 'Мои задания' },
       { path: '/student/journal', icon: '📊', label: 'Журнал оценок' },
-      { path: '/student/grades', icon: '⭐', label: 'Успеваемость' },
       { path: '/student/profile', icon: '👤', label: 'Профиль' },
     ]
   }
@@ -632,7 +631,7 @@ body {
 }
 
 .app-main.with-sidebar.sidebar-collapsed {
-  margin-left: 70px;
+  /* margin-left: 70px; */
 }
 
 /* ============================================

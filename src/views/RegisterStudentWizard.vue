@@ -344,7 +344,7 @@
 
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">Заявление родителя/представителя</label>
+              <label class="form-label">Заявление родителя/представителя <span class="required">*</span></label>
               <div class="file-upload-box">
                 <input
                   type="file"
@@ -358,10 +358,11 @@
                   <span class="file-text">{{ files.guardian_application ? files.guardian_application.name : 'Выбрать файл' }}</span>
                 </label>
               </div>
+              <small class="error-message" v-if="errors['guardian_application']">{{ errors['guardian_application'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Копия паспорта родителя</label>
+              <label class="form-label">Копия паспорта родителя <span class="required">*</span></label>
               <div class="file-upload-box">
                 <input
                   type="file"
@@ -375,10 +376,11 @@
                   <span class="file-text">{{ files.guardian_passport ? files.guardian_passport.name : 'Выбрать файл' }}</span>
                 </label>
               </div>
+              <small class="error-message" v-if="errors['guardian_passport']">{{ errors['guardian_passport'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Свидетельство о рождении</label>
+              <label class="form-label">Свидетельство о рождении <span class="required">*</span></label>
               <div class="file-upload-box">
                 <input
                   type="file"
@@ -392,10 +394,11 @@
                   <span class="file-text">{{ files.birth_certificate ? files.birth_certificate.name : 'Выбрать файл' }}</span>
                 </label>
               </div>
+              <small class="error-message" v-if="errors['birth_certificate']">{{ errors['birth_certificate'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Документ с PIN-кодом студента</label>
+              <label class="form-label">Документ с PIN-кодом студента <span class="required">*</span></label>
               <div class="file-upload-box">
                 <input
                   type="file"
@@ -409,10 +412,11 @@
                   <span class="file-text">{{ files.student_pin_doc ? files.student_pin_doc.name : 'Выбрать файл' }}</span>
                 </label>
               </div>
+              <small class="error-message" v-if="errors['student_pin_doc']">{{ errors['student_pin_doc'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Медицинская справка</label>
+              <label class="form-label">Медицинская справка <span class="required">*</span></label>
               <div class="file-upload-box">
                 <input
                   type="file"
@@ -426,6 +430,25 @@
                   <span class="file-text">{{ files.medical_certificate ? files.medical_certificate.name : 'Выбрать файл' }}</span>
                 </label>
               </div>
+              <small class="error-message" v-if="errors['medical_certificate']">{{ errors['medical_certificate'] }}</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Скан-копия личного дела из предыдущего учебного заведения <span class="required">*</span></label>
+              <div class="file-upload-box">
+                <input
+                  type="file"
+                  @change="pick('previous_school_record',$event)"
+                  accept=".jpg,.jpeg,.pdf"
+                  :id="'file-prev-school'"
+                  class="file-input-hidden"
+                />
+                <label :for="'file-prev-school'" class="file-upload-label">
+                  <span class="file-icon">📄</span>
+                  <span class="file-text">{{ files.previous_school_record ? files.previous_school_record.name : 'Выбрать файл' }}</span>
+                </label>
+              </div>
+              <small class="error-message" v-if="errors['previous_school_record']">{{ errors['previous_school_record'] }}</small>
             </div>
           </div>
         </div>
@@ -529,6 +552,7 @@ const files = ref<Record<string, File | null>>({
   student_pin_doc: null,
   guardian_passport: null,
   medical_certificate: null,
+  previous_school_record: null,
 })
 
 const errors = ref<Record<string,string>>({})
@@ -616,10 +640,50 @@ async function goStep2() {
 }
 
 
+function validateDocuments(): boolean {
+  clearErrors()
+  let hasErrors = false
+
+  // Проверяем все обязательные документы
+  if (!files.value.guardian_application) {
+    setFieldError('guardian_application', 'Обязательное поле')
+    hasErrors = true
+  }
+  if (!files.value.guardian_passport) {
+    setFieldError('guardian_passport', 'Обязательное поле')
+    hasErrors = true
+  }
+  if (!files.value.birth_certificate) {
+    setFieldError('birth_certificate', 'Обязательное поле')
+    hasErrors = true
+  }
+  if (!files.value.student_pin_doc) {
+    setFieldError('student_pin_doc', 'Обязательное поле')
+    hasErrors = true
+  }
+  if (!files.value.medical_certificate) {
+    setFieldError('medical_certificate', 'Обязательное поле')
+    hasErrors = true
+  }
+  if (!files.value.previous_school_record) {
+    setFieldError('previous_school_record', 'Обязательное поле')
+    hasErrors = true
+  }
+
+  return !hasErrors
+}
+
 // Отправка данных и файлов
 async function submitAll() {
   error2.value = ''; ok.value = false; saving.value = true
   try {
+    // Проверяем, что все документы загружены
+    if (!validateDocuments()) {
+      error2.value = 'Пожалуйста, загрузите все обязательные документы'
+      saving.value = false
+      return
+    }
+
     // Собираем FormData: и данные шага 1, и файлы
     const fd = new FormData()
 

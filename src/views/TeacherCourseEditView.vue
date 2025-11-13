@@ -18,9 +18,7 @@
         <aside class="modules-sidebar">
           <div class="sidebar-header">
             <h3>Модули</h3>
-            <button class="btn-icon" @click="createModule" title="Добавить модуль">
-              <span>➕</span>
-            </button>
+            
           </div>
           <ul class="modules-list">
             <li
@@ -532,7 +530,6 @@
                   <select v-model="quiz.newQ.type" class="inp small">
                     <option value="single">Один правильный</option>
                     <option value="multiple">Несколько правильных</option>
-                    <option value="text">Свободный ответ</option>
                   </select>
                   <button class="btn xs" @click="addQuestion">+ Добавить вопрос</button>
                 </div>
@@ -650,12 +647,6 @@ async function loadCourse(){
   chapters.value = []
   paragraphsByChapter.value = {}
   if (activeModuleId.value) await loadChapters(activeModuleId.value)
-}
-
-async function createModule(){
-  const { data } = await api.post(`/teacher/courses/${id}/modules`, {})
-  await loadCourse()
-  activeModuleId.value = data.id
 }
 
 async function createChapter(){
@@ -1926,7 +1917,7 @@ watch(()=>route.params.id, loadCourse)
 /* Grid layouts for assignment/quiz modals */
 .grid2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 24px;
 }
 

@@ -69,6 +69,9 @@
                 {{ module.display_name }} - {{ module.title }}
               </th>
             </template>
+            <th rowspan="3" class="final-grade-col">Годовая</th>
+            <th v-if="journalData.course?.has_exam_grades" rowspan="3" class="final-grade-col">Экзамен</th>
+            <th v-if="journalData.course?.has_exam_grades" rowspan="3" class="final-grade-col">Итоговая</th>
           </tr>
           <tr class="header-row-2">
             <template v-for="module in journalData.modules" :key="'para-' + module.module_id">
@@ -130,6 +133,38 @@
                 {{ journalData.grades_by_module[module.module_id]?.grade || '—' }}
               </td>
             </template>
+
+            <!-- Годовая оценка -->
+            <td
+              class="final-grade-cell"
+              :class="getGradeCellClass(journalData.yearly_grade?.grade)"
+              @click="showFinalGradeDetails(journalData.yearly_grade, 'Годовая оценка')"
+              :title="getFinalGradeTitle(journalData.yearly_grade)"
+            >
+              {{ journalData.yearly_grade?.grade || '—' }}
+            </td>
+
+            <!-- Экзаменационная оценка (только для 9 и 11 классов) -->
+            <td
+              v-if="journalData.course?.has_exam_grades"
+              class="final-grade-cell"
+              :class="getGradeCellClass(journalData.exam_grade?.grade)"
+              @click="showFinalGradeDetails(journalData.exam_grade, 'Экзаменационная оценка')"
+              :title="getFinalGradeTitle(journalData.exam_grade)"
+            >
+              {{ journalData.exam_grade?.grade || '—' }}
+            </td>
+
+            <!-- Итоговая оценка (только для 9 и 11 классов) -->
+            <td
+              v-if="journalData.course?.has_exam_grades"
+              class="final-grade-cell"
+              :class="getGradeCellClass(journalData.final_grade?.grade)"
+              @click="showFinalGradeDetails(journalData.final_grade, 'Итоговая оценка')"
+              :title="getFinalGradeTitle(journalData.final_grade)"
+            >
+              {{ journalData.final_grade?.grade || '—' }}
+            </td>
           </tr>
         </tbody>
       </table>
@@ -236,6 +271,13 @@ interface ModuleGradeInfo {
   teacher_comment?: string | null
 }
 
+interface FinalGradeInfo {
+  id: number
+  grade: number | null
+  graded_at: string | null
+  teacher_comment?: string | null
+}
+
 interface JournalData {
   grades_by_paragraph: {
     [paragraph_id: number]: {
@@ -248,6 +290,14 @@ interface JournalData {
   }
   paragraphs: ParagraphInfo[]
   modules: ModuleInfo[]
+  yearly_grade?: FinalGradeInfo | null
+  exam_grade?: FinalGradeInfo | null
+  final_grade?: FinalGradeInfo | null
+  course?: {
+    id: number
+    level_id: number
+    has_exam_grades: boolean
+  }
   average?: number
   total_grades?: number
 }
@@ -363,6 +413,26 @@ function showModuleGradeDetails(moduleGrade: ModuleGradeInfo | null | undefined)
     }
     showModal.value = true
   }
+}
+
+function showFinalGradeDetails(finalGrade: FinalGradeInfo | null | undefined, title: string) {
+  if (finalGrade) {
+    gradeDetails.value = {
+      id: finalGrade.id,
+      grade: finalGrade.grade,
+      score: 0,
+      max_points: 0,
+      title: title,
+      graded_at: finalGrade.graded_at || '',
+      teacher_comment: finalGrade.teacher_comment
+    }
+    showModal.value = true
+  }
+}
+
+function getFinalGradeTitle(finalGrade: FinalGradeInfo | null | undefined): string {
+  if (!finalGrade) return ''
+  return `Дата: ${formatDate(finalGrade.graded_at || '')}`
 }
 
 function closeModal() {
@@ -688,6 +758,7 @@ function getAverageClass(average: number | undefined): string {
   background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
 }
 
+
 /* Заголовки параграфов */
 .paragraph-header {
   background-color: #f1f5f9;
@@ -788,6 +859,35 @@ function getAverageClass(average: number | undefined): string {
 .module-grade-cell:hover {
   transform: scale(1.15);
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 20;
+}
+
+/* Финальные оценки (годовая, экзаменационная, итоговая) */
+.header-row-1 .final-grade-col {
+  /* background-color: #fff3cd; */
+  font-weight: 700;
+  min-width: 80px;
+  /* border-left: 2px solid; */
+  /* color: #856404; */
+    background-color: #e9ecef;
+  color: #333;
+  
+}
+
+
+.final-grade-cell {
+  background-color: #fffbf0;
+  font-weight: 700;
+  font-size: 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 2px solid #ffc107;
+}
+
+.final-grade-cell:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
   z-index: 20;
 }
 

@@ -72,6 +72,9 @@
                 {{ module.display_name }}
               </th>
             </template>
+            <th rowspan="3" class="final-grade-col">Годовая</th>
+            <th v-if="journalData.course?.has_exam_grades" rowspan="3" class="final-grade-col">Экзамен</th>
+            <th v-if="journalData.course?.has_exam_grades" rowspan="3" class="final-grade-col">Итоговая</th>
             <th rowspan="3" class="average-col">Средний балл</th>
           </tr>
           <tr class="header-row-2">
@@ -135,6 +138,38 @@
                 {{ student.grades_by_module[module.module_id]?.grade || '—' }}
               </td>
             </template>
+
+            <!-- Годовая оценка (редактируемая) -->
+            <td
+              class="final-grade-cell editable"
+              :class="getGradeCellClass(student.yearly_grade?.grade)"
+              @click="openFinalGradeModal(student, 'yearly')"
+              :title="student.yearly_grade?.graded_at ? 'Выставлено: ' + formatDate(student.yearly_grade.graded_at) + ' (клик для редактирования)' : 'Клик для выставления годовой оценки'"
+            >
+              {{ student.yearly_grade?.grade || '—' }}
+            </td>
+
+            <!-- Экзаменационная оценка (только для 9 и 11 классов) -->
+            <td
+              v-if="journalData.course?.has_exam_grades"
+              class="final-grade-cell editable"
+              :class="getGradeCellClass(student.exam_grade?.grade)"
+              @click="openFinalGradeModal(student, 'exam')"
+              :title="student.exam_grade?.graded_at ? 'Выставлено: ' + formatDate(student.exam_grade.graded_at) + ' (клик для редактирования)' : 'Клик для выставления экзаменационной оценки'"
+            >
+              {{ student.exam_grade?.grade || '—' }}
+            </td>
+
+            <!-- Итоговая оценка (только для 9 и 11 классов) -->
+            <td
+              v-if="journalData.course?.has_exam_grades"
+              class="final-grade-cell editable"
+              :class="getGradeCellClass(student.final_grade?.grade)"
+              @click="openFinalGradeModal(student, 'final')"
+              :title="student.final_grade?.graded_at ? 'Выставлено: ' + formatDate(student.final_grade.graded_at) + ' (клик для редактирования)' : 'Клик для выставления итоговой оценки'"
+            >
+              {{ student.final_grade?.grade || '—' }}
+            </td>
 
             <td class="average-cell">{{ student.average?.toFixed(2) || 'N/A' }}</td>
           </tr>
@@ -200,6 +235,59 @@
               Удалить оценку
             </button>
             <button @click="closeModuleGradeModal" :disabled="saving" class="cancel-btn">
+              Отмена
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Модалка для выставления финальных оценок (годовая, экзамен, итоговая) -->
+    <div v-if="showFinalGradeModal" class="modal-overlay" @click="closeFinalGradeModal">
+      <div class="modal-content" @click.stop>
+        <h2>{{ getFinalGradeTitle() }}</h2>
+
+        <div v-if="finalGradeForm.student" class="grade-form">
+          <div class="detail-row">
+            <span class="label">Студент:</span>
+            <span class="value">{{ finalGradeForm.student.student_name }}</span>
+          </div>
+
+          <div class="form-group">
+            <label for="final-grade">Оценка (2-5):</label>
+            <select id="final-grade" v-model.number="finalGradeForm.grade_5" required>
+              <option :value="null">Выберите оценку</option>
+              <option :value="5">5 (Отлично)</option>
+              <option :value="4">4 (Хорошо)</option>
+              <option :value="3">3 (Удовлетворительно)</option>
+              <option :value="2">2 (Неудовлетворительно)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="final-comment">Комментарий (необязательно):</label>
+            <textarea
+              id="final-comment"
+              v-model="finalGradeForm.teacher_comment"
+              rows="3"
+              maxlength="1000"
+              placeholder="Добавьте комментарий к оценке..."
+            ></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button @click="saveFinalGrade" :disabled="finalGradeForm.grade_5 === null || saving" class="save-btn">
+              {{ saving ? 'Сохранение...' : 'Сохранить' }}
+            </button>
+            <button
+              v-if="finalGradeForm.id"
+              @click="deleteFinalGrade"
+              :disabled="saving"
+              class="delete-btn"
+            >
+              Удалить оценку
+            </button>
+            <button @click="closeFinalGradeModal" :disabled="saving" class="cancel-btn">
               Отмена
             </button>
           </div>
@@ -312,6 +400,13 @@ interface ModuleGradeInfo {
   teacher_comment?: string | null
 }
 
+interface FinalGradeInfo {
+  id: number
+  grade: number | null
+  graded_at: string | null
+  teacher_comment?: string | null
+}
+
 interface StudentData {
   student_id: number
   student_name: string
@@ -324,6 +419,9 @@ interface StudentData {
   grades_by_module: {
     [module_id: number]: ModuleGradeInfo | null
   }
+  yearly_grade: FinalGradeInfo | null
+  exam_grade: FinalGradeInfo | null
+  final_grade: FinalGradeInfo | null
   average: number
 }
 
@@ -331,6 +429,11 @@ interface JournalData {
   students: StudentData[]
   paragraphs: ParagraphInfo[]
   modules: ModuleInfo[]
+  course?: {
+    id: number
+    level_id: number
+    has_exam_grades: boolean
+  }
   summary?: {
     total_students: number
     total_grades: number
@@ -368,6 +471,22 @@ const moduleGradeForm = ref<{
   grade_5: null,
   teacher_comment: ''
 })
+
+const showFinalGradeModal = ref(false)
+const finalGradeForm = ref<{
+  id: number | null
+  student: StudentData | null
+  gradeType: 'yearly' | 'exam' | 'final' | null
+  grade_5: number | null
+  teacher_comment: string
+}>({
+  id: null,
+  student: null,
+  gradeType: null,
+  grade_5: null,
+  teacher_comment: ''
+})
+
 const saving = ref(false)
 
 // Группируем параграфы по модулям для визуального отображения
@@ -535,6 +654,96 @@ async function deleteModuleGrade() {
     closeModuleGradeModal()
   } catch (error: any) {
     console.error('Ошибка удаления модульной оценки:', error)
+    alert('Ошибка удаления оценки: ' + (error.response?.data?.message || error.message))
+  } finally {
+    saving.value = false
+  }
+}
+
+// ===== Функции для финальных оценок (годовая, экзамен, итоговая) =====
+
+function openFinalGradeModal(student: StudentData, gradeType: 'yearly' | 'exam' | 'final') {
+  const existingGrade = gradeType === 'yearly'
+    ? student.yearly_grade
+    : gradeType === 'exam'
+    ? student.exam_grade
+    : student.final_grade
+
+  finalGradeForm.value = {
+    id: existingGrade?.id || null,
+    student: student,
+    gradeType: gradeType,
+    grade_5: existingGrade?.grade || null,
+    teacher_comment: existingGrade?.teacher_comment || ''
+  }
+  showFinalGradeModal.value = true
+}
+
+function closeFinalGradeModal() {
+  showFinalGradeModal.value = false
+  finalGradeForm.value = {
+    id: null,
+    student: null,
+    gradeType: null,
+    grade_5: null,
+    teacher_comment: ''
+  }
+}
+
+function getFinalGradeTitle(): string {
+  const titles = {
+    yearly: 'Годовая оценка',
+    exam: 'Экзаменационная оценка',
+    final: 'Итоговая оценка'
+  }
+  return titles[finalGradeForm.value.gradeType || 'yearly'] || 'Финальная оценка'
+}
+
+async function saveFinalGrade() {
+  if (!finalGradeForm.value.student || finalGradeForm.value.grade_5 === null || !finalGradeForm.value.gradeType) {
+    return
+  }
+
+  saving.value = true
+  try {
+    const endpoint = finalGradeForm.value.gradeType === 'yearly'
+      ? 'yearly-grade'
+      : finalGradeForm.value.gradeType === 'exam'
+      ? 'exam-grade'
+      : 'final-grade'
+
+    await api.post(`/teacher/courses/${filters.value.course_id}/${endpoint}`, {
+      student_id: finalGradeForm.value.student.student_id,
+      grade_5: finalGradeForm.value.grade_5,
+      teacher_comment: finalGradeForm.value.teacher_comment || null
+    })
+
+    // Перезагружаем журнал
+    await loadJournal()
+    closeFinalGradeModal()
+  } catch (error: any) {
+    console.error('Ошибка сохранения финальной оценки:', error)
+    alert('Ошибка сохранения оценки: ' + (error.response?.data?.message || error.message))
+  } finally {
+    saving.value = false
+  }
+}
+
+async function deleteFinalGrade() {
+  if (!finalGradeForm.value.id) return
+
+  const gradeTypeName = getFinalGradeTitle().toLowerCase()
+  if (!confirm(`Вы уверены, что хотите удалить ${gradeTypeName}?`)) return
+
+  saving.value = true
+  try {
+    await api.delete(`/teacher/final-grades/${finalGradeForm.value.id}`)
+
+    // Перезагружаем журнал
+    await loadJournal()
+    closeFinalGradeModal()
+  } catch (error: any) {
+    console.error('Ошибка удаления финальной оценки:', error)
     alert('Ошибка удаления оценки: ' + (error.response?.data?.message || error.message))
   } finally {
     saving.value = false
@@ -867,6 +1076,29 @@ h1 {
   transform: scale(1.1);
   box-shadow: 0 0 8px rgba(40, 167, 69, 0.3);
   z-index: 20;
+}
+
+/* Колонки финальных оценок */
+.final-grade-col {
+  background-color: #fff3cd;
+  font-weight: 700;
+  min-width: 80px;
+  border-left: 2px solid #ffc107;
+}
+
+.final-grade-cell {
+  background-color: #fffbf0;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-left: 2px solid #ffc107;
+}
+
+.final-grade-cell.editable:hover {
+  background-color: #fff8e1;
+  box-shadow: 0 0 5px rgba(255, 193, 7, 0.3);
 }
 
 /* Колонка среднего балла */

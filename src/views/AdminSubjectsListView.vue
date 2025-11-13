@@ -99,7 +99,7 @@ loadAreas().then(load)
 .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .tbl{width:100%;border-collapse:collapse}
 .tbl th,.tbl td{border-bottom:1px solid #eee;padding:8px;text-align:left}
-.inp{padding:6px;border:1px solid #ddd;border-radius:6px}
+.inp{background-color: #f6f6f6; color: #222;padding:6px;border:1px solid #ddd;border-radius:6px}
 .inp.small{padding:4px 6px}
 .btn{padding:6px 10px;border:1px solid #ddd;border-radius:6px;background:#fff;text-decoration:none;cursor:pointer}
 .btn.danger{border-color:#e53935;color:#e53935}
