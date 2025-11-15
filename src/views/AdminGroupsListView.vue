@@ -1,49 +1,47 @@
 <template>
   <div class="card">
     <div class="head">
-      <h3>Группы</h3>
-      <router-link class="btn" to="/admin/groups/new">+ Создать</router-link>
+      <h3>{{ $t('groups.title') }}</h3>
+      <router-link class="btn" to="/admin/groups/new">+ {{ $t('groups.create') }}</router-link>
     </div>
 
     <div class="toolbar">
-      <label>Уровень:</label>
+      <label>{{ $t('groups.level') }}:</label>
       <select v-model.number="filters.level_id" @change="load" class="inp small">
-        <option :value="0">Все</option>
+        <option :value="0">{{ $t('groups.allLevels') }}</option>
         <option v-for="lv in levels" :key="lv.id" :value="lv.id">
-          {{ lv.number }} класс
+          {{ lv.number }} {{ $t('groups.class') }}
         </option>
       </select>
-      <button class="btn" @click="reset">Сброс</button>
+      <button class="btn" @click="reset">{{ $t('groups.reset') }}</button>
     </div>
 
     <table class="tbl">
       <thead>
       <tr>
-        <th>ID</th>
-        <th>Группа</th>
-        <th>Уровень</th>
-        <th>Литера</th>
-        <th>Студентов</th>
-        <th>Классный руководитель</th>
-        <th style="width:280px">Действия</th>
+        <th>{{ $t('groups.name') }}</th>
+        <th>{{ $t('groups.level') }}</th>
+        <th>{{ $t('groups.letter') }}</th>
+        <th>{{ $t('groups.studentsCount') }}</th>
+        <th>{{ $t('groups.homeroom') }}</th>
+        <th style="width:280px">{{ $t('common.actions') }}</th>
       </tr>
       </thead>
       <tbody>
       <tr v-for="g in rows" :key="g.id">
-        <td>{{ g.id }}</td>
         <td>{{ g.display_name || (g.level?.number + (g.class_letter ? '-' + g.class_letter : '')) }}</td>
         <td>{{ g.level?.number }}</td>
         <td>{{ g.class_letter }}</td>
         <td>{{ g.students_count }}</td>
         <td>
           <span v-if="g.homeroom">{{ g.homeroom.name }}<br><small>{{ g.homeroom.email }}</small></span>
-          <span v-else class="muted">не назначен</span>
+          <span v-else class="muted">{{ $t('groups.notAssigned') }}</span>
         </td>
         <td class="actions">
-          <router-link class="btn" :to="`/admin/groups/${g.id}/courses`">Курсы</router-link>
-          <router-link class="btn" :to="`/admin/groups/${g.id}/students`">Студенты</router-link>
-          <router-link class="btn" :to="`/admin/groups/${g.id}/edit`">Редактировать</router-link>
-          <button class="btn danger" @click="remove(g)">Удалить</button>
+          <router-link class="btn" :to="`/admin/groups/${g.id}/courses`">{{ $t('groups.viewCourses') }}</router-link>
+          <router-link class="btn" :to="`/admin/groups/${g.id}/students`">{{ $t('groups.viewStudents') }}</router-link>
+          <router-link class="btn" :to="`/admin/groups/${g.id}/edit`">{{ $t('common.edit') }}</router-link>
+          <button class="btn danger" @click="remove(g)">{{ $t('common.delete') }}</button>
         </td>
       </tr>
       </tbody>
@@ -56,7 +54,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
+
+const { t } = useI18n()
 
 const rows = ref<any[]>([])
 const levels = ref<any[]>([])
@@ -76,7 +77,7 @@ async function load() {
     const { data } = await api.get('/admin/groups', { params })
     rows.value = data
   } catch (e:any) {
-    error.value = e?.data?.message || e?.message || 'Ошибка загрузки'
+    error.value = e?.data?.message || e?.message || t('groups.loadError')
   }
 }
 
@@ -86,12 +87,13 @@ function reset() {
 }
 
 async function remove(g:any) {
-  if (!confirm(`Удалить группу "${g.display_name || (g.level?.number + '-' + (g.class_letter || ''))}"?`)) return
+  const groupName = g.display_name || (g.level?.number + '-' + (g.class_letter || ''))
+  if (!confirm(t('groups.deleteConfirm', { name: groupName }))) return
   try {
     await api.delete(`/admin/groups/${g.id}`)
     await load()
   } catch (e:any) {
-    alert(e?.data?.message || e?.message || 'Не удалось удалить')
+    alert(e?.data?.message || e?.message || t('groups.deleteError'))
   }
 }
 

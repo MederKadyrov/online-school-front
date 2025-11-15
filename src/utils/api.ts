@@ -14,6 +14,12 @@ api.interceptors.request.use((config) => {
         config.headers['Authorization'] = `Bearer ${auth.token}`
         config.headers['Accept'] = 'application/json'
     }
+
+    // Добавляем заголовок Accept-Language для локализации
+    const locale = localStorage.getItem('locale') || 'ru'
+    config.headers = config.headers || {}
+    config.headers['Accept-Language'] = locale
+
     return config
 })
 

@@ -1,68 +1,68 @@
 <template>
   <div class="card" :key="route.params.id || 'new'">
-    <h3>{{ isEdit ? 'Редактирование преподавателя' : 'Добавление преподавателя' }}</h3>
+    <h3>{{ isEdit ? $t('teacherForm.editTitle') : $t('teacherForm.createTitle') }}</h3>
 
     <!-- Лоадер -->
-    <div v-if="loading" class="muted">Загрузка...</div>
+    <div v-if="loading" class="muted">{{ $t('teacherForm.loading') }}</div>
 
     <!-- Форма показывается только когда загрузились данные (или создаём нового) -->
     <form v-else @submit.prevent="submit">
       <div class="grid">
         <div>
-          <label>Фамилия</label>
+          <label>{{ $t('teacherForm.lastName') }}</label>
           <input v-model="form.last_name" class="inp" />
         </div>
         <div>
-          <label>Имя</label>
+          <label>{{ $t('teacherForm.firstName') }}</label>
           <input v-model="form.first_name" class="inp" />
         </div>
         <div>
-          <label>Отчество</label>
+          <label>{{ $t('teacherForm.middleName') }}</label>
           <input v-model="form.middle_name" class="inp" />
         </div>
 
         <div>
-          <label>Email</label>
+          <label>{{ $t('teacherForm.email') }}</label>
           <input v-model="form.email" class="inp" />
         </div>
         <div>
-          <label>Телефон</label>
+          <label>{{ $t('teacherForm.phone') }}</label>
           <input v-model="form.phone" class="inp" />
         </div>
         <div>
-          <label>Пол</label>
+          <label>{{ $t('teacherForm.sex') }}</label>
           <select v-model="form.sex" class="inp">
-            <option value="male">мужской</option>
-            <option value="female">женский</option>
+            <option value="male">{{ $t('teacherForm.male') }}</option>
+            <option value="female">{{ $t('teacherForm.female') }}</option>
           </select>
         </div>
 
         <div>
-          <label>PIN (14 цифр)</label>
+          <label>{{ $t('teacherForm.pin') }}</label>
           <input v-model="form.pin" class="inp" />
         </div>
         <div>
-          <label>Гражданство</label>
+          <label>{{ $t('teacherForm.citizenship') }}</label>
           <input v-model="form.citizenship" class="inp" />
         </div>
         <div>
-          <label>Адрес</label>
+          <label>{{ $t('teacherForm.address') }}</label>
           <input v-model="form.address" class="inp" />
         </div>
 
         <!-- Пароль редактируем опционально: поля видны только в режиме создания -->
         <div v-if="!isEdit">
-          <label>Пароль</label>
+          <label>{{ $t('teacherForm.password') }}</label>
           <input type="password" v-model="form.password" class="inp" />
         </div>
         <div v-if="!isEdit">
-          <label>Подтверждение пароля</label>
+          <label>{{ $t('teacherForm.passwordConfirmation') }}</label>
           <input type="password" v-model="form.password_confirmation" class="inp" />
         </div>
       </div>
 
       <div class="subjects">
-        <h4>Предметы</h4>
+        <h4>{{ $t('teacherForm.subjects') }}</h4>
         <div class="chips">
           <label v-for="s in subjects" :key="s.id" class="chip">
             <input type="checkbox" :value="s.id" v-model="form.subjects" />
@@ -72,14 +72,14 @@
       </div>
 
       <div class="actions">
-        <router-link to="/admin/teachers" class="btn">← Назад</router-link>
+        <router-link to="/admin/teachers" class="btn">← {{ $t('teacherForm.back') }}</router-link>
         <button class="btn primary" type="submit" :disabled="saving">
-          {{ saving ? 'Сохранение...' : (isEdit ? 'Сохранить' : 'Создать') }}
+          {{ saving ? $t('teacherForm.saving') : (isEdit ? $t('teacherForm.save') : $t('teacherForm.create')) }}
         </button>
       </div>
 
       <p v-if="error" class="error">{{ error }}</p>
-      <p v-if="ok" class="ok">Сохранено</p>
+      <p v-if="ok" class="ok">{{ $t('teacherForm.saved') }}</p>
     </form>
   </div>
 </template>
@@ -87,8 +87,10 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const isEdit = computed(() => !!route.params.id)
@@ -135,7 +137,7 @@ async function loadAll() {
   try {
     await Promise.all([loadSubjects(), loadRow()])
   } catch (e:any) {
-    error.value = e?.data?.message || e?.message || 'Ошибка загрузки'
+    error.value = e?.data?.message || e?.message || t('teacherForm.loadError')
   } finally {
     loading.value = false
   }
@@ -152,7 +154,7 @@ async function submit() {
       router.push('/admin/teachers')
     }
   } catch (e:any) {
-    error.value = e?.data?.message || e?.message || 'Ошибка сохранения'
+    error.value = e?.data?.message || e?.message || t('teacherForm.saveError')
   } finally {
     saving.value = false
   }

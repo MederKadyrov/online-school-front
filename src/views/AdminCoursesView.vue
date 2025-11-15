@@ -1,36 +1,36 @@
 <template>
   <div class="admin-courses-view">
     <div class="header">
-      <h1>Курсы учителей</h1>
+      <h1>{{ $t('courses.title') }}</h1>
       <div v-if="total > 0" class="courses-counter">
-        Всего курсов: <strong>{{ total }}</strong>
+        {{ $t('courses.totalCount') }}: <strong>{{ total }}</strong>
       </div>
     </div>
 
     <div class="toolbar">
       <select v-model="filters.subject_id" @change="applyFilters" class="filter-select">
-        <option value="">Все предметы</option>
+        <option value="">{{ $t('courses.allSubjects') }}</option>
         <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
           {{ subject.name }}
         </option>
       </select>
 
       <select v-model="filters.level_id" @change="applyFilters" class="filter-select">
-        <option value="">Все классы</option>
+        <option value="">{{ $t('courses.allLevels') }}</option>
         <option v-for="level in levels" :key="level.id" :value="level.id">
-          {{ level.number }} класс
+          {{ level.number }} {{ $t('courses.class') }}
         </option>
       </select>
 
       <select v-model="filters.group_id" @change="applyFilters" class="filter-select">
-        <option value="">Все группы</option>
+        <option value="">{{ $t('courses.allGroups') }}</option>
         <option v-for="group in groups" :key="group.id" :value="group.id">
           {{ group.display_name }}
         </option>
       </select>
 
       <select v-model="filters.teacher_id" @change="applyFilters" class="filter-select">
-        <option value="">Все учителя</option>
+        <option value="">{{ $t('courses.allTeachers') }}</option>
         <option v-for="teacher in teachers" :key="teacher.id" :value="teacher.id">
           {{ teacher.name }}
         </option>
@@ -38,26 +38,26 @@
     </div>
 
     <!-- Таблица курсов -->
-    <div v-if="loading" class="loading">Загрузка...</div>
+    <div v-if="loading" class="loading">{{ $t('courses.loading') }}</div>
 
     <div v-else class="table-wrapper">
       <table class="courses-table">
         <thead>
           <tr>
-            <th>№</th>
-            <th>Класс</th>
-            <th>Предмет</th>
-            <th>Учитель</th>
-            <th>Группы</th>
-            <th>Модулей</th>
-            <th>Создан</th>
-            <th>Действия</th>
+            <th>{{ $t('courses.number') }}</th>
+            <th>{{ $t('courses.level') }}</th>
+            <th>{{ $t('courses.subject') }}</th>
+            <th>{{ $t('courses.teacher') }}</th>
+            <th>{{ $t('courses.groups') }}</th>
+            <th>{{ $t('courses.modules') }}</th>
+            <th>{{ $t('courses.created') }}</th>
+            <th>{{ $t('courses.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(course, index) in courses" :key="course.id" class="course-row">
             <td>{{ (currentPage - 1) * perPage + index + 1 }}</td>
-            <td>{{ course.level.number }} класс</td>
+            <td>{{ course.level.number }} {{ $t('courses.class') }}</td>
             <td>{{ course.subject.name }}</td>
             <td>{{ course.teacher.name }}</td>
             <td>
@@ -70,7 +70,7 @@
             <td>{{ course.created_at }}</td>
             <td>
               <RouterLink :to="`/admin/courses/${course.id}`" class="btn-view">
-                Просмотр
+                {{ $t('courses.view') }}
               </RouterLink>
             </td>
           </tr>
@@ -78,7 +78,7 @@
       </table>
 
       <div v-if="courses.length === 0" class="no-data">
-        Курсы не найдены
+        {{ $t('courses.notFound') }}
       </div>
 
       <!-- Пагинация -->
@@ -86,7 +86,7 @@
         <button @click="goToPage(1)" :disabled="currentPage === 1" class="page-btn">«</button>
         <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1" class="page-btn">‹</button>
 
-        <span class="page-info">Страница {{ currentPage }} из {{ totalPages }}</span>
+        <span class="page-info">{{ $t('courses.page') }} {{ currentPage }} {{ $t('courses.of') }} {{ totalPages }}</span>
 
         <button @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages" class="page-btn">›</button>
         <button @click="goToPage(totalPages)" :disabled="currentPage === totalPages" class="page-btn">»</button>
@@ -98,7 +98,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
+
+const { t } = useI18n()
 
 interface Course {
   id: number
@@ -169,7 +172,7 @@ async function loadCourses() {
     totalPages.value = response.data.last_page
     total.value = response.data.total
   } catch (error) {
-    console.error('Ошибка загрузки курсов:', error)
+    console.error(t('courses.loadError'), error)
   } finally {
     loading.value = false
   }

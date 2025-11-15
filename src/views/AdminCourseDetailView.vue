@@ -1,29 +1,29 @@
 <template>
   <div class="admin-course-detail-view">
-    <div v-if="loading" class="loading">Загрузка...</div>
+    <div v-if="loading" class="loading">{{ $t('courseDetail.loading') }}</div>
 
     <div v-else-if="course" class="course-content">
       <!-- Header -->
       <div class="course-header">
         <div class="breadcrumb">
-          <RouterLink to="/admin/courses">← Курсы</RouterLink>
+          <RouterLink to="/admin/courses">← {{ $t('courseDetail.backToCourses') }}</RouterLink>
         </div>
         <h1>{{ course.title }}</h1>
         <div class="course-meta">
           <div class="meta-item">
-            <span class="meta-label">Предмет:</span>
+            <span class="meta-label">{{ $t('courseDetail.subject') }}:</span>
             <span class="meta-value">{{ course.subject.name }}</span>
           </div>
           <div class="meta-item">
-            <span class="meta-label">Учитель:</span>
+            <span class="meta-label">{{ $t('courseDetail.teacher') }}:</span>
             <span class="meta-value">{{ course.teacher.name }}</span>
           </div>
           <div class="meta-item">
-            <span class="meta-label">Класс:</span>
-            <span class="meta-value">{{ course.level.number }} класс</span>
+            <span class="meta-label">{{ $t('courseDetail.level') }}:</span>
+            <span class="meta-value">{{ course.level.number }} {{ $t('courseDetail.class') }}</span>
           </div>
           <div class="meta-item" v-if="course.groups.length > 0">
-            <span class="meta-label">Группы:</span>
+            <span class="meta-label">{{ $t('courseDetail.groups') }}:</span>
             <span class="meta-value">{{ course.groups.map(g => g.display_name).join(', ') }}</span>
           </div>
         </div>
@@ -31,26 +31,26 @@
 
       <!-- Course Description -->
       <div v-if="course.description" class="course-description">
-        <h3>Описание</h3>
+        <h3>{{ $t('courseDetail.description') }}</h3>
         <p>{{ course.description }}</p>
       </div>
 
       <!-- Modules -->
       <div class="modules-section">
-        <h2>Содержание курса ({{ course.modules.length }} модулей)</h2>
+        <h2>{{ $t('courseDetail.courseContent', { count: course.modules.length }) }}</h2>
 
         <div v-if="course.modules.length === 0" class="no-content">
-          В курсе пока нет модулей
+          {{ $t('courseDetail.noModules') }}
         </div>
 
         <div v-for="module in course.modules" :key="module.id" class="module-card">
           <div class="module-header" @click="toggleModule(module.id)">
             <div class="module-title">
-              <span class="module-number">Модуль {{ module.number }}</span>
+              <span class="module-number">{{ $t('courseDetail.module') }} {{ module.number }}</span>
               <span class="module-name">{{ module.title }}</span>
             </div>
             <div class="module-stats">
-              <span class="stat">{{ module.chapters.length }} глав(ы)</span>
+              <span class="stat">{{ $t('courseDetail.chaptersCount', { count: module.chapters.length }) }}</span>
               <span class="toggle-icon">{{ expandedModules.has(module.id) ? '▼' : '►' }}</span>
             </div>
           </div>
@@ -60,11 +60,11 @@
             <div v-for="chapter in module.chapters" :key="chapter.id" class="chapter-card">
               <div class="chapter-header" @click="toggleChapter(chapter.id)">
                 <div class="chapter-title">
-                  <span class="chapter-number">Глава {{ module.number }}.{{ chapter.number }}</span>
+                  <span class="chapter-number">{{ $t('courseDetail.chapter') }} {{ module.number }}.{{ chapter.number }}</span>
                   <span class="chapter-name">{{ chapter.title }}</span>
                 </div>
                 <div class="chapter-stats">
-                  <span class="stat">{{ chapter.paragraphs.length }} параграф(ов)</span>
+                  <span class="stat">{{ $t('courseDetail.paragraphsCount', { count: chapter.paragraphs.length }) }}</span>
                   <span class="toggle-icon">{{ expandedChapters.has(chapter.id) ? '▼' : '►' }}</span>
                 </div>
               </div>
@@ -78,9 +78,9 @@
                       <span class="paragraph-name">{{ paragraph.title }}</span>
                     </div>
                     <div class="paragraph-badges">
-                      <span v-if="paragraph.has_assignment" class="badge badge-assignment">Задание</span>
-                      <span v-if="paragraph.has_quiz" class="badge badge-quiz">Тест</span>
-                      <span v-if="paragraph.resources_count > 0" class="badge badge-resources">{{ paragraph.resources_count }} ресурс(ов)</span>
+                      <span v-if="paragraph.has_assignment" class="badge badge-assignment">{{ $t('courseDetail.assignment') }}</span>
+                      <span v-if="paragraph.has_quiz" class="badge badge-quiz">{{ $t('courseDetail.quiz') }}</span>
+                      <span v-if="paragraph.resources_count > 0" class="badge badge-resources">{{ $t('courseDetail.resourcesCount', { count: paragraph.resources_count }) }}</span>
                       <span class="toggle-icon">{{ expandedParagraphs.has(paragraph.id) ? '▼' : '►' }}</span>
                     </div>
                   </div>
@@ -88,14 +88,14 @@
                   <div v-show="expandedParagraphs.has(paragraph.id)" class="paragraph-content">
                     <!-- Description -->
                     <div v-if="paragraph.description" class="content-section">
-                      <h5>Описание:</h5>
+                      <h5>{{ $t('courseDetail.description') }}:</h5>
                       <p class="content-text">{{ paragraph.description }}</p>
                     </div>
 
                     <!-- Resources -->
                     <div v-if="paragraph.resources && paragraph.resources.length > 0" class="resources-section">
                       <div class="collapsible-header" @click="toggleResources(paragraph.id)">
-                        <h5>📎 Ресурсы ({{ paragraph.resources.length }})</h5>
+                        <h5>📎 {{ $t('courseDetail.resources', { count: paragraph.resources.length }) }}</h5>
                         <span class="toggle-icon">{{ expandedResources.has(paragraph.id) ? '▼' : '►' }}</span>
                       </div>
                       <div v-show="expandedResources.has(paragraph.id)" class="resources-list">
@@ -105,7 +105,7 @@
                             <div class="resource-title">{{ resource.title }}</div>
                             <div class="resource-meta">
                               <span class="resource-type">{{ getResourceTypeLabel(resource.type) }}</span>
-                              <a v-if="resource.url" :href="resource.url" target="_blank" class="resource-link">Открыть ссылку</a>
+                              <a v-if="resource.url" :href="resource.url" target="_blank" class="resource-link">{{ $t('courseDetail.openLink') }}</a>
                               <span v-if="resource.path" class="resource-path">{{ resource.path }}</span>
                             </div>
                           </div>
@@ -116,18 +116,18 @@
                     <!-- Assignment -->
                     <div v-if="paragraph.assignment" class="assignment-section">
                       <div class="collapsible-header" @click="toggleAssignment(paragraph.assignment.id)">
-                        <h5>📝 Задание: {{ paragraph.assignment.title }}</h5>
+                        <h5>📝 {{ $t('courseDetail.assignment') }}: {{ paragraph.assignment.title }}</h5>
                         <span class="toggle-icon">{{ expandedAssignments.has(paragraph.assignment.id) ? '▼' : '►' }}</span>
                       </div>
                       <div v-show="expandedAssignments.has(paragraph.assignment.id)" class="assignment-details">
                         <div v-if="paragraph.assignment.instructions" class="assignment-instructions">
-                          <strong>Инструкции:</strong>
+                          <strong>{{ $t('courseDetail.instructions') }}:</strong>
                           <p>{{ paragraph.assignment.instructions }}</p>
                         </div>
 
                         <!-- Assignment Attachments -->
                         <div v-if="paragraph.assignment.has_attachments" class="assignment-attachments">
-                          <strong>📎 Прикрепленные файлы:</strong>
+                          <strong>📎 {{ $t('courseDetail.attachedFiles') }}:</strong>
                           <div class="attachment-item">
                             <span class="attachment-icon">📄</span>
                             <span class="attachment-path">{{ paragraph.assignment.attachments_path }}</span>
@@ -136,16 +136,16 @@
 
                         <div class="assignment-meta">
                           <span v-if="paragraph.assignment.max_points" class="meta-badge">
-                            Баллы: {{ paragraph.assignment.max_points }}
+                            {{ $t('courseDetail.points') }}: {{ paragraph.assignment.max_points }}
                           </span>
                           <span v-if="paragraph.assignment.due_at" class="meta-badge">
-                            Срок: {{ paragraph.assignment.due_at }}
+                            {{ $t('courseDetail.deadline') }}: {{ paragraph.assignment.due_at }}
                           </span>
                           <span class="meta-badge" :class="'status-' + paragraph.assignment.status">
                             {{ getStatusLabel(paragraph.assignment.status) }}
                           </span>
                           <span class="meta-badge">
-                            Работ сдано: {{ paragraph.assignment.submissions_count }}
+                            {{ $t('courseDetail.submissionsCount', { count: paragraph.assignment.submissions_count }) }}
                           </span>
                         </div>
                       </div>
@@ -154,43 +154,43 @@
                     <!-- Quiz -->
                     <div v-if="paragraph.quiz" class="quiz-section">
                       <div class="collapsible-header" @click="toggleQuiz(paragraph.quiz.id)">
-                        <h5>🧪 Тест: {{ paragraph.quiz.title }}</h5>
+                        <h5>🧪 {{ $t('courseDetail.quiz') }}: {{ paragraph.quiz.title }}</h5>
                         <span class="toggle-icon">{{ expandedQuizzes.has(paragraph.quiz.id) ? '▼' : '►' }}</span>
                       </div>
                       <div v-show="expandedQuizzes.has(paragraph.quiz.id)" class="quiz-details">
                         <div v-if="paragraph.quiz.instructions" class="quiz-instructions">
-                          <strong>Инструкции:</strong>
+                          <strong>{{ $t('courseDetail.instructions') }}:</strong>
                           <p>{{ paragraph.quiz.instructions }}</p>
                         </div>
                         <div class="quiz-meta">
                           <span class="meta-badge">
-                            Вопросов: {{ paragraph.quiz.questions_count }}
+                            {{ $t('courseDetail.questionsCount', { count: paragraph.quiz.questions_count }) }}
                           </span>
                           <span v-if="paragraph.quiz.max_points" class="meta-badge">
-                            Баллы: {{ paragraph.quiz.max_points }}
+                            {{ $t('courseDetail.points') }}: {{ paragraph.quiz.max_points }}
                           </span>
                           <span v-if="paragraph.quiz.time_limit_sec" class="meta-badge">
-                            Время: {{ Math.floor(paragraph.quiz.time_limit_sec / 60) }} мин
+                            {{ $t('courseDetail.time') }}: {{ Math.floor(paragraph.quiz.time_limit_sec / 60) }} {{ $t('courseDetail.minutes') }}
                           </span>
                           <span v-if="paragraph.quiz.max_attempts" class="meta-badge">
-                            Попыток: {{ paragraph.quiz.max_attempts }}
+                            {{ $t('courseDetail.attempts') }}: {{ paragraph.quiz.max_attempts }}
                           </span>
                           <span class="meta-badge" :class="'status-' + paragraph.quiz.status">
                             {{ getStatusLabel(paragraph.quiz.status) }}
                           </span>
                           <span v-if="paragraph.quiz.shuffle" class="meta-badge">
-                            Перемешивание: Да
+                            {{ $t('courseDetail.shuffle') }}: {{ $t('courseDetail.yes') }}
                           </span>
                         </div>
 
                         <!-- Quiz Questions -->
                         <div v-if="paragraph.quiz.questions && paragraph.quiz.questions.length > 0" class="quiz-questions">
-                          <h6>Вопросы теста:</h6>
+                          <h6>{{ $t('courseDetail.quizQuestions') }}:</h6>
                           <div v-for="(question, qIdx) in paragraph.quiz.questions" :key="question.id" class="question-item">
                             <div class="question-header">
-                              <span class="question-number">Вопрос {{ qIdx + 1 }}</span>
+                              <span class="question-number">{{ $t('courseDetail.question') }} {{ qIdx + 1 }}</span>
                               <span class="question-type-badge">{{ getQuestionTypeLabel(question.type) }}</span>
-                              <span class="question-points">{{ question.points }} балл(ов)</span>
+                              <span class="question-points">{{ question.points }} {{ $t('courseDetail.points').toLowerCase() }}</span>
                             </div>
                             <div class="question-text">{{ question.text }}</div>
 
@@ -221,8 +221,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
 
+const { t } = useI18n()
 const route = useRoute()
 
 interface Course {
@@ -382,9 +384,9 @@ function toggleResources(id: number) {
 
 function getStatusLabel(status: string): string {
   const labels: Record<string, string> = {
-    'draft': 'Черновик',
-    'published': 'Опубликовано',
-    'archived': 'В архиве'
+    'draft': t('courseDetail.statusDraft'),
+    'published': t('courseDetail.statusPublished'),
+    'archived': t('courseDetail.statusArchived')
   }
   return labels[status] || status
 }
@@ -405,26 +407,26 @@ function getResourceIcon(type: string): string {
 
 function getResourceTypeLabel(type: string): string {
   const labels: Record<string, string> = {
-    'video': 'Видео',
-    'document': 'Документ',
-    'link': 'Ссылка',
-    'image': 'Изображение',
-    'audio': 'Аудио',
-    'pdf': 'PDF',
-    'presentation': 'Презентация',
-    'text': 'Текст'
+    'video': t('courseDetail.resourceVideo'),
+    'document': t('courseDetail.resourceDocument'),
+    'link': t('courseDetail.resourceLink'),
+    'image': t('courseDetail.resourceImage'),
+    'audio': t('courseDetail.resourceAudio'),
+    'pdf': t('courseDetail.resourcePdf'),
+    'presentation': t('courseDetail.resourcePresentation'),
+    'text': t('courseDetail.resourceText')
   }
   return labels[type] || type
 }
 
 function getQuestionTypeLabel(type: string): string {
   const labels: Record<string, string> = {
-    'multiple_choice': 'Выбор варианта',
-    'true_false': 'Верно/Неверно',
-    'short_answer': 'Краткий ответ',
-    'essay': 'Эссе',
-    'matching': 'Сопоставление',
-    'fill_blank': 'Заполнить пропуск'
+    'multiple_choice': t('courseDetail.questionMultipleChoice'),
+    'true_false': t('courseDetail.questionTrueFalse'),
+    'short_answer': t('courseDetail.questionShortAnswer'),
+    'essay': t('courseDetail.questionEssay'),
+    'matching': t('courseDetail.questionMatching'),
+    'fill_blank': t('courseDetail.questionFillBlank')
   }
   return labels[type] || type
 }

@@ -1,28 +1,28 @@
 <template>
   <div class="card" :key="route.params.id || 'new'">
-    <h3>{{ isEdit ? 'Редактирование предмета' : 'Создание предмета' }}</h3>
+    <h3>{{ isEdit ? $t('subjects.editTitle') : $t('subjects.createTitle') }}</h3>
 
-    <div v-if="loading" class="muted">Загрузка…</div>
+    <div v-if="loading" class="muted">{{ $t('subjects.loading') }}</div>
 
     <form v-else @submit.prevent="submit">
       <div class="grid">
         <div class="field">
-          <label>Название предмета<span class="req">*</span></label>
-          <input v-model.trim="form.name" class="inp" placeholder="Например: Алгебра" />
+          <label>{{ $t('subjects.nameLabel') }}<span class="req">*</span></label>
+          <input v-model.trim="form.name" class="inp" :placeholder="$t('subjects.namePlaceholder')" />
           <small v-if="errors.name" class="error">{{ errors.name }}</small>
         </div>
 
         <div class="field">
-          <label>Код предмета<span class="req">*</span></label>
-          <input v-model.trim="form.code" class="inp" placeholder="Например: algebra" />
-          <small class="muted">Латиница/цифры/дефисы. Должен быть уникален.</small>
+          <label>{{ $t('subjects.codeLabel') }}<span class="req">*</span></label>
+          <input v-model.trim="form.code" class="inp" :placeholder="$t('subjects.codePlaceholder')" />
+          <small class="muted">{{ $t('subjects.codeHint') }}</small>
           <small v-if="errors.code" class="error">{{ errors.code }}</small>
         </div>
 
         <div class="field">
-          <label>Образовательная область</label>
+          <label>{{ $t('subjects.areaLabel') }}</label>
           <select v-model.number="form.area_id" class="inp">
-            <option :value="null">— не выбрано —</option>
+            <option :value="null">{{ $t('subjects.areaNotSelected') }}</option>
             <option v-for="a in areas" :key="a.id" :value="a.id">{{ a.name }}</option>
           </select>
           <small v-if="errors.area_id" class="error">{{ errors.area_id }}</small>
@@ -30,14 +30,14 @@
       </div>
 
       <div class="actions">
-        <router-link class="btn" to="/admin/subjects">← Назад</router-link>
+        <router-link class="btn" to="/admin/subjects">← {{ $t('subjects.backButton') }}</router-link>
         <button class="btn primary" type="submit" :disabled="saving">
-          {{ saving ? 'Сохранение…' : (isEdit ? 'Сохранить' : 'Создать') }}
+          {{ saving ? $t('subjects.saving') : (isEdit ? $t('subjects.saveButton') : $t('subjects.createButton')) }}
         </button>
       </div>
 
       <p v-if="error" class="error">{{ error }}</p>
-      <p v-if="ok" class="ok">Сохранено</p>
+      <p v-if="ok" class="ok">{{ $t('subjects.saved') }}</p>
     </form>
   </div>
 </template>
@@ -45,8 +45,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const isEdit = computed(() => !!route.params.id)
@@ -85,7 +87,7 @@ async function loadAll() {
   try {
     await Promise.all([loadAreas(), loadRow()])
   } catch (e:any) {
-    error.value = e?.data?.message || e?.message || 'Ошибка загрузки'
+    error.value = e?.data?.message || e?.message || t('subjects.loadError')
   } finally {
     loading.value = false
   }
@@ -113,7 +115,7 @@ async function submit() {
     }
   } catch (e:any) {
     errors.value = mapBackendErrors(e)
-    error.value = e?.data?.message || e?.message || 'Ошибка сохранения'
+    error.value = e?.data?.message || e?.message || t('subjects.saveError')
   } finally {
     saving.value=false
   }

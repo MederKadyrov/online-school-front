@@ -1,28 +1,28 @@
 <template>
   <div v-if="group" class="card">
     <div class="head">
-      <h3>Курсы группы {{ group.display_name }}</h3>
-      <router-link class="btn" to="/admin/groups">← К списку групп</router-link>
+      <h3>{{ $t('groupCourses.title', { groupName: group.display_name }) }}</h3>
+      <router-link class="btn" to="/admin/groups">← {{ $t('groupCourses.backToGroups') }}</router-link>
     </div>
 
     <p class="muted" v-if="group.level">
-      Уровень: {{ group.level.number }} класс
+      {{ $t('groupCourses.level') }}: {{ group.level.number }} {{ $t('groupCourses.class') }}
     </p>
 
     <div class="toolbar">
-      <input v-model="search" class="inp" type="search" placeholder="Поиск по названию, предмету или учителю" />
+      <input v-model="search" class="inp" type="search" :placeholder="$t('groupCourses.searchPlaceholder')" />
       <label class="inline">
         <input type="checkbox" v-model="sameLevel" />
-        Только уровень {{ group.level?.number ?? 'группы' }}
+        {{ $t('groupCourses.onlyLevel', { level: group.level?.number ?? $t('groupCourses.groupLevel') }) }}
       </label>
-      <button class="btn" @click="refresh" :disabled="loading">Обновить</button>
+      <button class="btn" @click="refresh" :disabled="loading">{{ $t('groupCourses.refresh') }}</button>
     </div>
 
     <div class="grid">
       <div class="column">
-        <h4>Доступные курсы</h4>
-        <p class="muted" v-if="!filteredAvailable.length && !loading">Ничего не найдено</p>
-        <p class="muted" v-if="loading">Загрузка…</p>
+        <h4>{{ $t('groupCourses.availableCourses') }}</h4>
+        <p class="muted" v-if="!filteredAvailable.length && !loading">{{ $t('groupCourses.notFound') }}</p>
+        <p class="muted" v-if="loading">{{ $t('groupCourses.loading') }}</p>
         <div class="course-list" v-else>
           <label v-for="course in filteredAvailable" :key="course.id" class="course-row">
             <input type="checkbox" :value="course.id" v-model="selectedIds" />
@@ -38,7 +38,7 @@
       </div>
 
       <div class="column">
-        <h4>Выбранные ({{ selectedIds.length }})</h4>
+        <h4>{{ $t('groupCourses.selected', { count: selectedIds.length }) }}</h4>
         <ul v-if="selectedCourses.length" class="selected-list">
           <li v-for="course in selectedCourses" :key="course.id" class="selected-item">
             <div>
@@ -48,16 +48,16 @@
                 <span v-if="course.teacher"> • {{ course.teacher.name }}</span>
               </div>
             </div>
-            <button class="btn xs" @click="unselect(course.id)">Убрать</button>
+            <button class="btn xs" @click="unselect(course.id)">{{ $t('groupCourses.remove') }}</button>
           </li>
         </ul>
-        <p class="muted" v-else>Пока ничего не выбрано.</p>
+        <p class="muted" v-else>{{ $t('groupCourses.nothingSelected') }}</p>
       </div>
     </div>
 
     <div class="actions">
       <button class="btn primary" @click="save" :disabled="saving">
-        {{ saving ? 'Сохранение…' : 'Сохранить привязку' }}
+        {{ saving ? $t('groupCourses.saving') : $t('groupCourses.saveBinding') }}
       </button>
       <span class="ok" v-if="msg">{{ msg }}</span>
       <span class="error" v-if="err">{{ err }}</span>
@@ -65,14 +65,16 @@
   </div>
 
   <p v-else-if="error" class="error">{{ error }}</p>
-  <p v-else class="muted">Загрузка…</p>
+  <p v-else class="muted">{{ $t('groupCourses.loading') }}</p>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
 
+const { t } = useI18n()
 const route = useRoute()
 
 const group = ref<any|null>(null)
@@ -135,7 +137,7 @@ async function load() {
     remember(data.available || [])
     remember(data.assigned || [])
   } catch (e: any) {
-    error.value = e?.data?.message || e?.message || 'Не удалось загрузить курсы'
+    error.value = e?.data?.message || e?.message || t('groupCourses.loadError')
   } finally {
     loading.value = false
   }
@@ -158,10 +160,10 @@ async function save() {
     await api.post(`/admin/groups/${groupId.value}/courses-sync`, {
       course_ids: selectedIds.value,
     })
-    msg.value = 'Сохранено'
+    msg.value = t('groupCourses.saved')
     await load()
   } catch (e: any) {
-    err.value = e?.data?.message || e?.message || 'Не удалось сохранить'
+    err.value = e?.data?.message || e?.message || t('groupCourses.saveError')
   } finally {
     saving.value = false
   }
@@ -182,11 +184,23 @@ watch(sameLevel, load)
 .btn.xs { padding: 4px 8px; font-size: 12px; }
 .inline { display: flex; align-items: center; gap: 6px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-.column { border: 1px solid #f0f0f0; border-radius: 8px; padding: 12px; background: #2c5c38; }
+.column { 
+  border: 1px solid #f0f0f0; 
+  border-radius: 8px; padding: 12px; 
+  /* background: #2c5c38;  */
+}
 .course-list { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; }
-.course-row { display: flex; gap: 10px; align-items: flex-start; padding: 8px; border: 1px solid #eee; border-radius: 6px; background: #8c9a23; }
+.course-row { 
+  display: flex; 
+  gap: 10px; 
+  align-items: flex-start; 
+  padding: 8px; 
+  border: 1px solid #eee; 
+  border-radius: 6px; 
+  background: #dfdfde; 
+}
 .selected-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.selected-item { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 8px; border: 1px solid #eee; border-radius: 6px; background: #27215f; }
+.selected-item { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 8px; border: 1px solid #eee; border-radius: 6px; background: #e8e8e9; }
 .actions { margin-top: 16px; display: flex; gap: 12px; align-items: center; }
 .muted { color: #666; }
 .error { color: #b00020; }

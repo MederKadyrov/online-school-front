@@ -1,35 +1,33 @@
 <template>
   <div class="card">
     <div class="head">
-      <h3>Преподаватели</h3>
-      <router-link class="btn" to="/admin/teachers/new">+ Добавить</router-link>
+      <h3>{{ $t('teachers.title') }}</h3>
+      <router-link class="btn" to="/admin/teachers/new">+ {{ $t('teachers.add') }}</router-link>
     </div>
 
     <div class="toolbar">
-      <input v-model="search" placeholder="Поиск: ФИО, email, телефон" @input="debouncedLoad" />
+      <input v-model="search" :placeholder="$t('teachers.searchPlaceholder')" @input="debouncedLoad" />
     </div>
 
     <table class="tbl">
       <thead>
       <tr>
-        <th>ID</th>
-        <th>ФИО</th>
-        <th>Email</th>
-        <th>Телефон</th>
-        <th>Предметы</th>
-        <th style="width:160px"></th>
+        <th>{{ $t('teachers.fullName') }}</th>
+        <th>{{ $t('teachers.email') }}</th>
+        <th>{{ $t('teachers.phone') }}</th>
+        <th>{{ $t('teachers.subjects') }}</th>
+        <th style="width:160px">{{ $t('common.actions') }}</th>
       </tr>
       </thead>
       <tbody>
       <tr v-for="t in teachers" :key="t.id">
-        <td>{{ t.id }}</td>
         <td>{{ t.name }}</td>
         <td>{{ t.email }}</td>
         <td>{{ t.phone }}</td>
         <td>{{ (t.subjects || []).map(s=>s.name).join(', ') }}</td>
         <td class="actions">
-          <router-link class="btn" :to="`/admin/teachers/${t.id}/edit`">Редактировать</router-link>
-          <button class="btn danger" @click="remove(t)">Удалить</button>
+          <router-link class="btn" :to="`/admin/teachers/${t.id}/edit`">{{ $t('common.edit') }}</router-link>
+          <button class="btn danger" @click="remove(t)">{{ $t('common.delete') }}</button>
         </td>
       </tr>
       </tbody>
@@ -41,7 +39,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
+
+const { t } = useI18n()
 
 const teachers = ref<any[]>([])
 const search = ref('')
@@ -53,7 +54,7 @@ async function load() {
     const { data } = await api.get('/admin/teachers', { params: { search: search.value } })
     teachers.value = data
   } catch (e:any) {
-    error.value = e?.data?.message || e?.message || 'Ошибка загрузки'
+    error.value = e?.data?.message || e?.message || t('teachers.loadError')
   }
 }
 
@@ -67,12 +68,12 @@ function debounce(fn: Function, ms=400) {
 const debouncedLoad = debounce(load, 400)
 
 async function remove(row: any) {
-  if (!confirm(`Удалить преподавателя "${row.name}"?`)) return
+  if (!confirm(t('teachers.deleteConfirm', { name: row.name }))) return
   try {
     await api.delete(`/admin/teachers/${row.id}`)
     await load()
   } catch (e:any) {
-    alert(e?.data?.message || e?.message || 'Не удалось удалить')
+    alert(e?.data?.message || e?.message || t('teachers.deleteError'))
   }
 }
 

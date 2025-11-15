@@ -1,50 +1,50 @@
 <template>
   <div class="submissions-container">
-    <h2>Мониторинг работ студентов</h2>
-    <p class="subtitle">Просмотр всех работ для контроля за учителями</p>
+    <h2>{{ $t('submissions.title') }}</h2>
+    <p class="subtitle">{{ $t('submissions.subtitle') }}</p>
 
     <!-- Фильтры -->
     <div class="filters">
       <div class="filter-row">
         <div class="filter-item">
-          <label>Статус</label>
+          <label>{{ $t('submissions.status') }}</label>
           <select v-model="filters.status" class="inp" @change="loadSubmissions">
-            <option value="">Все</option>
-            <option value="submitted">Отправлено</option>
-            <option value="returned">Проверено</option>
+            <option value="">{{ $t('submissions.allStatuses') }}</option>
+            <option value="submitted">{{ $t('submissions.submitted') }}</option>
+            <option value="returned">{{ $t('submissions.returned') }}</option>
           </select>
         </div>
 
         <div class="filter-item">
-          <label>Учитель</label>
+          <label>{{ $t('submissions.teacher') }}</label>
           <select v-model="filters.teacher_id" class="inp" @change="onTeacherChange">
-            <option value="">Все учителя</option>
+            <option value="">{{ $t('submissions.allTeachers') }}</option>
             <option v-for="t in teachers" :key="t.id" :value="t.id">{{ t.name }}</option>
           </select>
         </div>
 
         <div class="filter-item">
-          <label>Курс</label>
+          <label>{{ $t('submissions.course') }}</label>
           <select v-model="filters.course_id" class="inp" @change="loadSubmissions">
-            <option value="">Все курсы</option>
+            <option value="">{{ $t('submissions.allCourses') }}</option>
             <option v-for="c in filteredCourses" :key="c.id" :value="c.id">{{ c.display_name }}</option>
           </select>
         </div>
 
         <div class="filter-item">
-          <label>Группа</label>
+          <label>{{ $t('submissions.group') }}</label>
           <select v-model="filters.group_id" class="inp" @change="loadSubmissions">
-            <option value="">Все группы</option>
+            <option value="">{{ $t('submissions.allGroups') }}</option>
             <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.display_name }}</option>
           </select>
         </div>
 
         <div class="filter-item">
-          <label>Поиск студента</label>
+          <label>{{ $t('submissions.searchStudent') }}</label>
           <input
             v-model="filters.student_search"
             class="inp"
-            placeholder="Имя студента"
+            :placeholder="$t('submissions.studentPlaceholder')"
             @input="debouncedLoad"
           />
         </div>
@@ -53,9 +53,9 @@
 
     <!-- Счётчики -->
     <div class="counters">
-      <span class="counter">Всего: <strong>{{ submissions.length }}</strong></span>
-      <span class="counter ungraded">Непроверенных: <strong>{{ ungradedCount }}</strong></span>
-      <span class="counter graded">Проверенных: <strong>{{ gradedCount }}</strong></span>
+      <span class="counter">{{ $t('submissions.total') }}: <strong>{{ submissions.length }}</strong></span>
+      <span class="counter ungraded">{{ $t('submissions.ungraded') }}: <strong>{{ ungradedCount }}</strong></span>
+      <span class="counter graded">{{ $t('submissions.graded') }}: <strong>{{ gradedCount }}</strong></span>
     </div>
 
     <!-- Таблица -->
@@ -63,15 +63,15 @@
       <table class="submissions-table" v-if="submissions.length">
         <thead>
           <tr>
-            <th>Студент</th>
-            <th>Группа</th>
-            <th>Учитель</th>
-            <th>Курс</th>
-            <th>Задание</th>
-            <th>Дата отправки</th>
-            <th>Статус</th>
-            <th>Оценка</th>
-            <th>Действия</th>
+            <th>{{ $t('submissions.student') }}</th>
+            <th>{{ $t('submissions.group') }}</th>
+            <th>{{ $t('submissions.teacher') }}</th>
+            <th>{{ $t('submissions.course') }}</th>
+            <th>{{ $t('submissions.assignment') }}</th>
+            <th>{{ $t('submissions.submittedAt') }}</th>
+            <th>{{ $t('submissions.status') }}</th>
+            <th>{{ $t('submissions.grade') }}</th>
+            <th>{{ $t('submissions.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -89,7 +89,7 @@
             </td>
             <td>{{ s.grade_5 ?? '—' }}</td>
             <td class="actions-cell">
-              <button class="btn xs" @click="openViewModal(s)" title="Просмотр">
+              <button class="btn xs" @click="openViewModal(s)" :title="$t('submissions.view')">
                 👁️
               </button>
               <a
@@ -97,7 +97,7 @@
                 :href="storageUrl(s.file_path)"
                 target="_blank"
                 class="btn xs"
-                title="Скачать файл"
+                :title="$t('submissions.download')"
               >
                 📎
               </a>
@@ -105,23 +105,23 @@
           </tr>
         </tbody>
       </table>
-      <p v-else class="muted">Нет отправок</p>
+      <p v-else class="muted">{{ $t('submissions.noSubmissions') }}</p>
     </div>
 
     <!-- Модалка для просмотра -->
     <div v-if="viewModal.open" class="modal-overlay" @click.self="closeViewModal">
       <div class="modal-content">
         <button class="close-btn" @click="closeViewModal">×</button>
-        <h3>Просмотр работы</h3>
+        <h3>{{ $t('submissions.viewTitle') }}</h3>
 
         <div class="submission-details">
-          <p><strong>Студент:</strong> {{ viewModal.submission?.student?.name }}</p>
-          <p><strong>Группа:</strong> {{ viewModal.submission?.group?.name }}</p>
-          <p><strong>Учитель:</strong> {{ viewModal.submission?.teacher?.name }}</p>
-          <p><strong>Курс:</strong> {{ viewModal.submission?.course?.title }}</p>
-          <p><strong>Задание:</strong> {{ viewModal.submission?.assignment?.title }}</p>
-          <p><strong>Дата отправки:</strong> {{ formatDate(viewModal.submission?.submitted_at) }}</p>
-          <p><strong>Статус:</strong>
+          <p><strong>{{ $t('submissions.student') }}:</strong> {{ viewModal.submission?.student?.name }}</p>
+          <p><strong>{{ $t('submissions.group') }}:</strong> {{ viewModal.submission?.group?.name }}</p>
+          <p><strong>{{ $t('submissions.teacher') }}:</strong> {{ viewModal.submission?.teacher?.name }}</p>
+          <p><strong>{{ $t('submissions.course') }}:</strong> {{ viewModal.submission?.course?.title }}</p>
+          <p><strong>{{ $t('submissions.assignment') }}:</strong> {{ viewModal.submission?.assignment?.title }}</p>
+          <p><strong>{{ $t('submissions.submittedAt') }}:</strong> {{ formatDate(viewModal.submission?.submitted_at) }}</p>
+          <p><strong>{{ $t('submissions.status') }}:</strong>
             <span class="status-badge" :class="statusClass(viewModal.submission?.status)">
               {{ statusLabel(viewModal.submission?.status) }}
             </span>
@@ -129,33 +129,33 @@
         </div>
 
         <div v-if="viewModal.submission?.text_answer" class="text-answer">
-          <label>Текстовый ответ:</label>
+          <label>{{ $t('submissions.textAnswer') }}:</label>
           <div class="answer-box">{{ viewModal.submission.text_answer }}</div>
         </div>
 
         <div v-if="viewModal.submission?.file_path" class="file-download">
-          <label>Файл:</label>
+          <label>{{ $t('submissions.file') }}:</label>
           <a :href="storageUrl(viewModal.submission.file_path)" target="_blank" class="btn">
-            📎 Скачать файл
+            📎 {{ $t('submissions.download') }}
           </a>
         </div>
 
         <div v-if="viewModal.submission?.status === 'returned'" class="grading-info">
           <div class="grade-row">
             <div>
-              <label>Оценка:</label>
+              <label>{{ $t('submissions.grade') }}:</label>
               <p class="grade-value">{{ viewModal.submission.grade_5 ?? '—' }}</p>
             </div>
           </div>
 
           <div v-if="viewModal.submission.teacher_comment" class="teacher-comment">
-            <label>Комментарий учителя:</label>
+            <label>{{ $t('submissions.teacherComment') }}:</label>
             <div class="comment-box">{{ viewModal.submission.teacher_comment }}</div>
           </div>
         </div>
 
         <div class="modal-actions">
-          <button class="btn" @click="closeViewModal">Закрыть</button>
+          <button class="btn" @click="closeViewModal">{{ $t('common.close') }}</button>
         </div>
       </div>
     </div>
@@ -166,7 +166,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
+
+const { t } = useI18n()
 
 const submissions = ref<any[]>([])
 const courses = ref<any[]>([])
@@ -221,9 +224,9 @@ function formatDate(dateStr: string | null) {
 
 function statusLabel(status: string) {
   const labels: Record<string, string> = {
-    'submitted': 'Отправлено',
-    'returned': 'Проверено',
-    'needs_fix': 'Требует доработки'
+    'submitted': t('submissions.submitted'),
+    'returned': t('submissions.returned'),
+    'needs_fix': t('submissions.needsFix')
   }
   return labels[status] || status
 }
@@ -248,7 +251,7 @@ async function loadSubmissions() {
     const { data } = await api.get('/admin/submissions', { params })
     submissions.value = data
   } catch (e: any) {
-    error.value = e?.data?.message || e?.message || 'Ошибка загрузки'
+    error.value = e?.data?.message || e?.message || t('submissions.loadError')
   }
 }
 
@@ -257,7 +260,7 @@ async function loadCourses() {
     const { data } = await api.get('/admin/submissions/courses')
     courses.value = data
   } catch (e: any) {
-    console.error('Ошибка загрузки курсов:', e)
+    console.error(t('submissions.loadError'), e)
   }
 }
 
@@ -266,7 +269,7 @@ async function loadGroups() {
     const { data } = await api.get('/admin/groups')
     groups.value = data
   } catch (e: any) {
-    console.error('Ошибка загрузки групп:', e)
+    console.error(t('submissions.loadError'), e)
   }
 }
 
@@ -275,7 +278,7 @@ async function loadTeachers() {
     const { data } = await api.get('/admin/submissions/teachers')
     teachers.value = data
   } catch (e: any) {
-    console.error('Ошибка загрузки учителей:', e)
+    console.error(t('submissions.loadError'), e)
   }
 }
 

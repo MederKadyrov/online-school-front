@@ -1,28 +1,28 @@
 <template>
   <div class="container">
-    <h2>Управление паролями пользователей</h2>
+    <h2>{{ $t('passwords.title') }}</h2>
 
     <div class="search-box">
       <input
         v-model="searchQuery"
-        placeholder="Поиск по ФИО или PIN..."
+        :placeholder="$t('passwords.searchPlaceholder')"
         @input="debouncedSearch"
       />
     </div>
 
-    <div v-if="loading" class="loading">Загрузка...</div>
+    <div v-if="loading" class="loading">{{ $t('passwords.loading') }}</div>
 
     <div v-if="!loading && users.length === 0" class="empty">
-      Пользователи не найдены
+      {{ $t('passwords.notFound') }}
     </div>
 
     <table v-if="!loading && users.length > 0">
       <thead>
         <tr>
-          <th>PIN</th>
-          <th>ФИО</th>
-          <th>Email</th>
-          <th>Действия</th>
+          <th>{{ $t('passwords.pin') }}</th>
+          <th>{{ $t('passwords.fullName') }}</th>
+          <th>{{ $t('passwords.email') }}</th>
+          <th>{{ $t('passwords.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -32,7 +32,7 @@
           <td>{{ user.email || '—' }}</td>
           <td>
             <button @click="openResetModal(user)" class="btn-reset">
-              Сбросить пароль
+              {{ $t('passwords.resetPassword') }}
             </button>
           </td>
         </tr>
@@ -44,44 +44,44 @@
         @click="loadPage(pagination.current_page - 1)"
         :disabled="pagination.current_page === 1"
       >
-        ← Назад
+        ← {{ $t('passwords.previousPage') }}
       </button>
-      <span>Страница {{ pagination.current_page }} из {{ pagination.last_page }}</span>
+      <span>{{ $t('passwords.page') }} {{ pagination.current_page }} {{ $t('passwords.of') }} {{ pagination.last_page }}</span>
       <button
         @click="loadPage(pagination.current_page + 1)"
         :disabled="pagination.current_page === pagination.last_page"
       >
-        Вперед →
+        {{ $t('passwords.nextPage') }} →
       </button>
     </div>
 
     <!-- Модалка для сброса пароля -->
     <div v-if="showResetModal" class="modal-overlay" @click="closeResetModal">
       <div class="modal" @click.stop>
-        <h3>Сброс пароля</h3>
-        <p><strong>Пользователь:</strong> {{ selectedUser?.full_name }}</p>
-        <p><strong>PIN:</strong> {{ selectedUser?.pin }}</p>
+        <h3>{{ $t('passwords.modalTitle') }}</h3>
+        <p><strong>{{ $t('passwords.user') }}:</strong> {{ selectedUser?.full_name }}</p>
+        <p><strong>{{ $t('passwords.pin') }}:</strong> {{ selectedUser?.pin }}</p>
 
         <div v-if="tempPassword" class="success-box">
-          <p><strong>✓ Пароль успешно сброшен!</strong></p>
-          <p>Временный пароль:</p>
+          <p><strong>✓ {{ $t('passwords.passwordResetSuccess') }}</strong></p>
+          <p>{{ $t('passwords.tempPassword') }}:</p>
           <div class="temp-password">{{ tempPassword }}</div>
           <p style="font-size: 12px; color: #666; margin-top: 8px;">
-            Сохраните этот пароль и передайте пользователю
+            {{ $t('passwords.savePasswordNote') }}
           </p>
         </div>
 
         <div v-if="!tempPassword">
           <p style="color: #dc3545; margin-bottom: 16px;">
-            Вы уверены, что хотите сбросить пароль этому пользователю?
+            {{ $t('passwords.confirmReset') }}
           </p>
           <button @click="confirmReset" class="btn-confirm" :disabled="resetting">
-            {{ resetting ? 'Сброс...' : 'Да, сбросить пароль' }}
+            {{ resetting ? $t('passwords.resetting') : $t('passwords.confirmButton') }}
           </button>
         </div>
 
         <button @click="closeResetModal" class="btn-close">
-          {{ tempPassword ? 'Закрыть' : 'Отмена' }}
+          {{ tempPassword ? $t('passwords.close') : $t('passwords.cancel') }}
         </button>
 
         <div v-if="error" class="error">{{ error }}</div>
@@ -92,7 +92,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
+
+const { t } = useI18n()
 
 type User = {
   id: number
@@ -173,7 +176,7 @@ const confirmReset = async () => {
     const { data } = await api.post(`/admin/users/${selectedUser.value.id}/reset-password`)
     tempPassword.value = data.temp_password
   } catch (e: any) {
-    error.value = e?.response?.data?.message || 'Ошибка сброса пароля'
+    error.value = e?.response?.data?.message || t('passwords.resetError')
   } finally {
     resetting.value = false
   }

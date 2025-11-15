@@ -503,7 +503,6 @@ const paragraphsByModule = computed(() => {
 
 onMounted(async () => {
   await loadGroups()
-  await loadCourses()
 })
 
 async function loadGroups() {
@@ -515,9 +514,10 @@ async function loadGroups() {
   }
 }
 
-async function loadCourses() {
+async function loadCourses(groupId?: string) {
   try {
-    const response = await api.get('/teacher/journal/courses')
+    const params = groupId ? { group_id: groupId } : {}
+    const response = await api.get('/teacher/journal/courses', { params })
     courses.value = response.data
   } catch (error) {
     console.error('Ошибка загрузки курсов:', error)
@@ -529,6 +529,13 @@ async function onGroupChange() {
   filters.value.module_id = 'all'
   modules.value = []
   journalData.value = { students: [], paragraphs: [], modules: [] }
+
+  // Загружаем курсы для выбранной группы
+  if (filters.value.group_id) {
+    await loadCourses(filters.value.group_id)
+  } else {
+    courses.value = []
+  }
 }
 
 async function onCourseChange() {

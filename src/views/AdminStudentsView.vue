@@ -1,55 +1,55 @@
 <template>
   <div class="admin-students-view">
     <div class="header">
-      <h1>Список студентов</h1>
+      <h1>{{ $t("students.title") }}</h1>
       <div v-if="total > 0" class="student-counter">
-        Колличество: <strong>{{ total }}</strong>
+        {{ $t("students.count") }}: <strong>{{ total }}</strong>
       </div>
     </div>
 
     <div class="toolbar">
-      <input v-model="search" placeholder="Поиск: ФИО, PIN" @input="debouncedLoad" class="search-input" />
+      <input v-model="search" :placeholder="$t('students.searchPlaceholder')" @input="debouncedLoad" class="search-input" />
 
       <select v-model="filters.gender" @change="applyFilters" class="filter-select">
-        <option value="">Все полы</option>
-        <option value="male">Мужской</option>
-        <option value="female">Женский</option>
-        
+        <option value="">{{ $t("students.allGenders") }}</option>
+        <option value="male">{{ $t("students.male") }}</option>
+        <option value="female">{{ $t("students.female") }}</option>
+
       </select>
 
       <select v-model="filters.level_id" @change="applyFilters" class="filter-select">
-        <option value="">Все классы</option>
+        <option value="">{{ $t("students.allLevels") }}</option>
         <option v-for="level in levels" :key="level.id" :value="level.id">
-          {{ level.number }} класс
+          {{ level.number }} {{ $t("students.class") }}
         </option>
       </select>
 
       <select v-model="filters.group_id" @change="applyFilters" class="filter-select">
-        <option value="">Все группы</option>
+        <option value="">{{ $t("students.allGroups") }}</option>
         <option v-for="group in groups" :key="group.id" :value="group.id">
           {{ group.display_name }}
         </option>
       </select>
 
       <button @click="exportStudents" class="export-btn" :disabled="!allStudents || allStudents.length === 0">
-        📄 Экспорт в CSV
+        📄 {{ $t("students.exportCsv") }}
       </button>
     </div>
 
     <!-- Таблица студентов -->
-    <div v-if="loading" class="loading">Загрузка...</div>
+    <div v-if="loading" class="loading">{{ $t("students.loading") }}</div>
 
     <div v-else class="table-wrapper">
       <table class="students-table">
         <thead>
           <tr>
-            <th>№</th>
-            <th>ФИО</th>
-            <th>Пол</th>
-            <th>Класс</th>
-            <th>Группа</th>
-            <th>Дата рождения</th>
-            <th>PIN</th>
+            <th>{{ $t("students.number") }}</th>
+            <th>{{ $t("students.fullName") }}</th>
+            <th>{{ $t("students.gender") }}</th>
+            <th>{{ $t("students.level") }}</th>
+            <th>{{ $t("students.group") }}</th>
+            <th>{{ $t("students.birthDate") }}</th>
+            <th>{{ $t("students.pin") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -71,7 +71,7 @@
       </table>
 
       <div v-if="filteredStudents.length === 0" class="no-data">
-        Студенты не найдены
+        {{ $t("students.notFound") }}
       </div>
 
       <!-- Пагинация -->
@@ -79,7 +79,7 @@
         <button @click="goToPage(1)" :disabled="currentPage === 1" class="page-btn">«</button>
         <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1" class="page-btn">‹</button>
 
-        <span class="page-info">Страница {{ currentPage }} из {{ totalPages }}</span>
+        <span class="page-info">{{ $t("students.page") }} {{ currentPage }} {{ $t("students.of") }} {{ totalPages }}</span>
 
         <button @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages" class="page-btn">›</button>
         <button @click="goToPage(totalPages)" :disabled="currentPage === totalPages" class="page-btn">»</button>
@@ -89,86 +89,86 @@
     <!-- Модалка с детальной информацией -->
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
-        <h2>Информация о студенте</h2>
+        <h2>{{ $t("students.modalTitle") }}</h2>
 
         <div v-if="studentDetails" class="student-details">
           <div class="details-section">
-            <h3>Основная информация</h3>
+            <h3>{{ $t("students.mainInfo") }}</h3>
             <div class="detail-row">
-              <span class="label">ФИО:</span>
+              <span class="label">{{ $t("students.fullName") }}:</span>
               <span class="value">{{ studentDetails.full_name }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Пол:</span>
+              <span class="label">{{ $t("students.gender") }}:</span>
               <span class="value">{{ studentDetails.gender_display }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Дата рождения:</span>
+              <span class="label">{{ $t("students.birthDate") }}:</span>
               <span class="value">{{ formatDate(studentDetails.birth_date) }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">PIN:</span>
+              <span class="label">{{ $t("students.pin") }}:</span>
               <span class="value">{{ studentDetails.pin }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Класс:</span>
-              <span class="value">{{ studentDetails.level?.title || 'Не указан' }}</span>
+              <span class="label">{{ $t("students.level") }}:</span>
+              <span class="value">{{ studentDetails.level?.title || $t("students.notSpecified") }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Группа:</span>
-              <span class="value">{{ studentDetails.group?.display_name || 'Не указана' }}</span>
+              <span class="label">{{ $t("students.group") }}:</span>
+              <span class="value">{{ studentDetails.group?.display_name || $t("students.notSpecifiedFemale") }}</span>
             </div>
           </div>
 
           <div class="details-section">
-            <h3>Контактная информация</h3>
+            <h3>{{ $t("students.contactInfo") }}</h3>
             <div class="detail-row">
-              <span class="label">Email:</span>
-              <span class="value">{{ studentDetails.email || 'Не указан' }}</span>
+              <span class="label">{{ $t("students.email") }}:</span>
+              <span class="value">{{ studentDetails.email || $t("students.notSpecified") }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Телефон:</span>
-              <span class="value">{{ studentDetails.phone || 'Не указан' }}</span>
+              <span class="label">{{ $t("students.phone") }}:</span>
+              <span class="value">{{ studentDetails.phone || $t("students.notSpecified") }}</span>
             </div>
           </div>
 
           <div v-if="studentDetails.document" class="details-section">
-            <h3>Документ</h3>
+            <h3>{{ $t("students.documentInfo") }}</h3>
             <div class="detail-row">
-              <span class="label">Тип документа:</span>
+              <span class="label">{{ $t("students.documentType") }}:</span>
               <span class="value">{{ studentDetails.document.document_type }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Номер документа:</span>
+              <span class="label">{{ $t("students.documentNumber") }}:</span>
               <span class="value">{{ studentDetails.document.document_number }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Дата выдачи:</span>
+              <span class="label">{{ $t("students.issueDate") }}:</span>
               <span class="value">{{ formatDate(studentDetails.document.issue_date) }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Кем выдан:</span>
+              <span class="label">{{ $t("students.issuingAuthority") }}:</span>
               <span class="value">{{ studentDetails.document.issuing_authority }}</span>
             </div>
           </div>
 
           <div v-if="studentDetails.guardians && studentDetails.guardians.length > 0" class="details-section">
-            <h3>Родители/Опекуны</h3>
+            <h3>{{ $t("students.guardiansInfo") }}</h3>
             <div v-for="guardian in studentDetails.guardians" :key="guardian.id" class="guardian-info">
               <div class="detail-row">
-                <span class="label">ФИО:</span>
+                <span class="label">{{ $t("students.fullName") }}:</span>
                 <span class="value">{{ guardian.full_name }}</span>
               </div>
               <div class="detail-row">
-                <span class="label">Степень родства:</span>
+                <span class="label">{{ $t("students.relationship") }}:</span>
                 <span class="value">{{ guardian.relationship }}</span>
               </div>
               <div class="detail-row">
-                <span class="label">Телефон:</span>
+                <span class="label">{{ $t("students.phone") }}:</span>
                 <span class="value">{{ guardian.phone }}</span>
               </div>
               <div class="detail-row">
-                <span class="label">Email:</span>
+                <span class="label">{{ $t("students.email") }}:</span>
                 <span class="value">{{ guardian.email }}</span>
               </div>
               <hr v-if="studentDetails.guardians.length > 1" />
@@ -176,9 +176,9 @@
           </div>
         </div>
 
-        <div v-else class="loading">Загрузка...</div>
+        <div v-else class="loading">{{ $t("students.loading") }}</div>
 
-        <button @click="closeModal" class="close-btn">Закрыть</button>
+        <button @click="closeModal" class="close-btn">{{ $t("students.close") }}</button>
       </div>
     </div>
   </div>
@@ -186,7 +186,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
+
+const { t } = useI18n()
 
 interface Student {
   id: number
@@ -411,12 +414,12 @@ async function exportStudents() {
     window.URL.revokeObjectURL(url)
   } catch (error) {
     console.error('Ошибка экспорта студентов:', error)
-    alert('Ошибка при экспорте данных')
+    alert(t('students.exportError'))
   }
 }
 
 function formatDate(dateString: string | null): string {
-  if (!dateString) return 'Не указана'
+  if (!dateString) return t('students.notSpecifiedFemale')
   const date = new Date(dateString)
   return date.toLocaleDateString('ru-RU', {
     year: 'numeric',

@@ -1,13 +1,13 @@
 <template>
   <div class="admin-journal-view">
-    <h1>Журнал оценок</h1>
+    <h1>{{ $t('journal.title') }}</h1>
 
     <!-- Фильтры -->
     <div class="filters">
       <div class="filter-group">
-        <label>Группа:</label>
+        <label>{{ $t('journal.group') }}:</label>
         <select v-model="filters.group_id" @change="onGroupChange">
-          <option value="">Выберите группу</option>
+          <option value="">{{ $t('journal.selectGroup') }}</option>
           <option v-for="group in groups" :key="group.id" :value="group.id">
             {{ group.display_name }}
           </option>
@@ -15,9 +15,9 @@
       </div>
 
       <div class="filter-group">
-        <label>Курс:</label>
+        <label>{{ $t('journal.course') }}:</label>
         <select v-model="filters.course_id" @change="onCourseChange" :disabled="!filters.group_id">
-          <option value="">Выберите курс</option>
+          <option value="">{{ $t('journal.selectCourse') }}</option>
           <option v-for="course in courses" :key="course.id" :value="course.id">
             {{ course.display_name }}
           </option>
@@ -25,9 +25,9 @@
       </div>
 
       <div class="filter-group">
-        <label>Модуль:</label>
+        <label>{{ $t('journal.module') }}:</label>
         <select v-model="filters.module_id" @change="loadJournal" :disabled="!filters.course_id">
-          <option value="all">Все модули</option>
+          <option value="all">{{ $t('journal.allModules') }}</option>
           <option v-for="module in modules" :key="module.id" :value="module.id">
             {{ module.display_name }}
           </option>
@@ -35,35 +35,35 @@
       </div>
 
       <button @click="exportJournal" :disabled="!journalData.students?.length" class="export-btn">
-        📄 Экспорт
+        📄 {{ $t('journal.export') }}
       </button>
     </div>
 
     <!-- Статистика -->
     <div v-if="journalData.summary" class="summary">
       <div class="summary-item">
-        <span>Всего студентов:</span>
+        <span>{{ $t('journal.totalStudents') }}:</span>
         <strong>{{ journalData.summary.total_students }}</strong>
       </div>
       <div class="summary-item">
-        <span>Всего оценок:</span>
+        <span>{{ $t('journal.totalGrades') }}:</span>
         <strong>{{ journalData.summary.total_grades }}</strong>
       </div>
       <div class="summary-item">
-        <span>Средний балл:</span>
+        <span>{{ $t('journal.averageGrade') }}:</span>
         <strong>{{ journalData.summary.average_grade?.toFixed(2) || 'N/A' }}</strong>
       </div>
     </div>
 
     <!-- Таблица журнала -->
-    <div v-if="loading" class="loading">Загрузка...</div>
+    <div v-if="loading" class="loading">{{ $t('journal.loading') }}</div>
 
     <div v-else-if="journalData.students?.length" class="journal-table-wrapper">
       <table class="journal-table">
         <thead>
           <tr class="header-row-1">
             <th rowspan="3" class="sticky-col">№</th>
-            <th rowspan="3" class="sticky-col student-name-col">Студент</th>
+            <th rowspan="3" class="sticky-col student-name-col">{{ $t('journal.student') }}</th>
             <template v-for="module in journalData.modules" :key="module.module_id">
               <th
                 :colspan="(paragraphsByModule[module.module_id]?.length || 0) * 2 + 1"
@@ -72,10 +72,10 @@
                 {{ module.display_name }}
               </th>
             </template>
-            <th rowspan="3" class="average-col">Средний балл</th>
-            <th rowspan="3" class="final-grade-col">Годовая</th>
-            <th v-if="journalData.course?.has_exam_grades" rowspan="3" class="final-grade-col">Экзамен</th>
-            <th v-if="journalData.course?.has_exam_grades" rowspan="3" class="final-grade-col">Итоговая</th>
+            <th rowspan="3" class="average-col">{{ $t('journal.average') }}</th>
+            <th rowspan="3" class="final-grade-col">{{ $t('journal.yearlyGrade') }}</th>
+            <th v-if="journalData.course?.has_exam_grades" rowspan="3" class="final-grade-col">{{ $t('journal.examGrade') }}</th>
+            <th v-if="journalData.course?.has_exam_grades" rowspan="3" class="final-grade-col">{{ $t('journal.finalGrade') }}</th>
           </tr>
           <tr class="header-row-2">
             <template v-for="module in journalData.modules" :key="'para-' + module.module_id">
@@ -174,109 +174,109 @@
     </div>
 
     <div v-else-if="filters.group_id && filters.course_id" class="no-data">
-      Нет данных для отображения
+      {{ $t('journal.noData') }}
     </div>
 
     <div v-else class="no-data">
-      Выберите группу и курс для просмотра журнала
+      {{ $t('journal.selectGroupAndCourse') }}
     </div>
 
     <!-- Модалка с деталями оценки -->
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
-        <h2>Детали оценки</h2>
+        <h2>{{ $t('journal.gradeDetails') }}</h2>
 
         <div v-if="gradeDetails" class="grade-details">
           <div class="detail-row">
-            <span class="label">Студент:</span>
+            <span class="label">{{ $t('journal.student') }}:</span>
             <span class="value">{{ gradeDetails.student_name }}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Группа:</span>
+            <span class="label">{{ $t('journal.group') }}:</span>
             <span class="value">{{ gradeDetails.group }}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Предмет:</span>
+            <span class="label">{{ $t('journal.subject') }}:</span>
             <span class="value">{{ gradeDetails.subject }}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Учитель:</span>
+            <span class="label">{{ $t('journal.teacher') }}:</span>
             <span class="value">{{ gradeDetails.teacher }}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Тип:</span>
+            <span class="label">{{ $t('journal.type') }}:</span>
             <span class="value">{{ getGradeType(gradeDetails.type) }}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Название:</span>
+            <span class="label">{{ $t('journal.itemTitle') }}:</span>
             <span class="value">{{ gradeDetails.title }}</span>
           </div>
           <div v-if="gradeDetails.type === 'QuizAttempt'" class="detail-row">
-            <span class="label">Баллы:</span>
+            <span class="label">{{ $t('journal.points') }}:</span>
             <span class="value">{{ gradeDetails.score }} / {{ gradeDetails.max_points }}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Оценка:</span>
+            <span class="label">{{ $t('journal.grade') }}:</span>
             <span class="value grade-badge" :class="getGradeBadgeClass(gradeDetails.grade_5)">
               {{ gradeDetails.grade_5 }}
             </span>
           </div>
           <div class="detail-row">
-            <span class="label">Дата:</span>
+            <span class="label">{{ $t('journal.date') }}:</span>
             <span class="value">{{ formatDate(gradeDetails.graded_at) }}</span>
           </div>
 
           <div v-if="gradeDetails.teacher_comment" class="detail-row full-width">
-            <span class="label">Комментарий учителя:</span>
+            <span class="label">{{ $t('journal.teacherComment') }}:</span>
             <p class="comment">{{ gradeDetails.teacher_comment }}</p>
           </div>
 
           <!-- Дополнительная информация для теста -->
           <div v-if="gradeDetails.quiz" class="extra-info">
-            <h3>Информация о тесте</h3>
+            <h3>{{ $t('journal.testInfo') }}</h3>
             <div class="detail-row">
-              <span class="label">Начало:</span>
+              <span class="label">{{ $t('journal.start') }}:</span>
               <span class="value">{{ formatDate(gradeDetails.quiz.started_at) }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Окончание:</span>
+              <span class="label">{{ $t('journal.end') }}:</span>
               <span class="value">{{ formatDate(gradeDetails.quiz.finished_at) }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Автопроверка:</span>
-              <span class="value">{{ gradeDetails.quiz.autograded ? 'Да' : 'Нет' }}</span>
+              <span class="label">{{ $t('journal.autoGraded') }}:</span>
+              <span class="value">{{ gradeDetails.quiz.autograded ? $t('journal.yes') : $t('journal.no') }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Ответов:</span>
+              <span class="label">{{ $t('journal.answersCount') }}:</span>
               <span class="value">{{ gradeDetails.quiz.answers_count }}</span>
             </div>
           </div>
 
           <!-- Дополнительная информация для задания -->
           <div v-if="gradeDetails.assignment" class="extra-info">
-            <h3>Информация о задании</h3>
+            <h3>{{ $t('journal.assignmentInfo') }}</h3>
             <div class="detail-row">
-              <span class="label">Сдано:</span>
+              <span class="label">{{ $t('journal.submitted') }}:</span>
               <span class="value">{{ formatDate(gradeDetails.assignment.submitted_at) }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Статус:</span>
+              <span class="label">{{ $t('journal.status') }}:</span>
               <span class="value">{{ getSubmissionStatus(gradeDetails.assignment.status) }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Файл:</span>
-              <span class="value">{{ gradeDetails.assignment.has_file ? 'Прикреплен' : 'Нет' }}</span>
+              <span class="label">{{ $t('journal.file') }}:</span>
+              <span class="value">{{ gradeDetails.assignment.has_file ? $t('journal.attached') : $t('journal.no') }}</span>
             </div>
             <div v-if="gradeDetails.assignment.text_answer" class="detail-row full-width">
-              <span class="label">Ответ студента:</span>
+              <span class="label">{{ $t('journal.studentAnswer') }}:</span>
               <p class="comment">{{ gradeDetails.assignment.text_answer }}</p>
             </div>
           </div>
         </div>
 
-        <div v-else class="loading">Загрузка...</div>
+        <div v-else class="loading">{{ $t('journal.loading') }}</div>
 
-        <button @click="closeModal" class="close-btn">Закрыть</button>
+        <button @click="closeModal" class="close-btn">{{ $t('common.close') }}</button>
       </div>
     </div>
   </div>
@@ -284,8 +284,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
-// import api from '@/services/api'
+
+const { t } = useI18n()
 
 interface Group {
   id: number
@@ -539,19 +541,19 @@ function getGradeBadgeClass(grade: number | null): string {
 
 function getGradeType(type: string): string {
   const types: Record<string, string> = {
-    'QuizAttempt': 'Тест',
-    'AssignmentSubmission': 'Задание',
-    'Module': 'Модуль',
-    'Lesson': 'Урок'
+    'QuizAttempt': t('journal.typeTest'),
+    'AssignmentSubmission': t('journal.typeAssignment'),
+    'Module': t('journal.typeModule'),
+    'Lesson': t('journal.typeLesson')
   }
   return types[type] || type
 }
 
 function getSubmissionStatus(status: string): string {
   const statuses: Record<string, string> = {
-    'submitted': 'Сдано',
-    'returned': 'Проверено',
-    'needs_fix': 'Требует доработки'
+    'submitted': t('journal.statusSubmitted'),
+    'returned': t('journal.statusReturned'),
+    'needs_fix': t('journal.statusNeedsFix')
   }
   return statuses[status] || status
 }
@@ -602,7 +604,7 @@ async function exportJournal() {
     window.URL.revokeObjectURL(url)
   } catch (error) {
     console.error('Ошибка экспорта журнала:', error)
-    alert('Ошибка при экспорте данных')
+    alert(t('journal.exportError'))
   }
 }
 </script>

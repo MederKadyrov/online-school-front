@@ -6,7 +6,6 @@ import Login from '../views/LoginView.vue'
 import RegisterStudentWizard from '../views/RegisterStudentWizard.vue'
 import TeacherLessons from '../views/TeacherLessonsView.vue'
 import { useAuthStore } from '../stores/auth'
-import AdminSetupView from "../views/AdminSetupView.vue";
 import AdminRegisterTeacher from '../views/AdminRegisterTeacherView.vue'
 import StudentGrades from '../views/StudentGradesView.vue'
 import ForgotPassword from '../views/ForgotPasswordView.vue'
@@ -22,14 +21,6 @@ const routes: RouteRecordRaw[] = [
         meta: {
             auth: true,
             breadcrumb: { label: 'Уроки', icon: '📚' }
-        }
-    },
-    {
-        path: '/admin/setup',
-        component: AdminSetupView,
-        meta: {
-            auth: true,
-            breadcrumb: { label: 'Настройка', icon: '⚙️' }
         }
     },
     {

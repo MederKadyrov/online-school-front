@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import api from '../utils/api'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import api from '../utils/api'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const isEdit = !!route.params.id
@@ -45,7 +47,7 @@ async function submit() {
       router.push('/admin/groups')
     }
   } catch (e:any) {
-    error.value = e?.data?.message || e?.message || 'Ошибка'
+    error.value = e?.data?.message || e?.message || t('groupForm.saveError')
   }
 }
 onMounted(async () => { await Promise.all([loadLevels(), loadTeachers(), loadRow()]) })
@@ -53,32 +55,32 @@ onMounted(async () => { await Promise.all([loadLevels(), loadTeachers(), loadRow
 
 <template>
   <div class="card">
-    <h3>{{ isEdit ? 'Редактирование группы' : 'Создание группы' }}</h3>
+    <h3>{{ isEdit ? $t('groupForm.editTitle') : $t('groupForm.createTitle') }}</h3>
     <form @submit.prevent="submit">
-      <label>Уровень</label>
+      <label>{{ $t('groupForm.level') }}</label>
       <select v-model.number="form.level_id" class="inp" required>
-        <option :value="null">— выберите —</option>
+        <option :value="null">{{ $t('groupForm.levelSelect') }}</option>
         <option v-for="lv in levels" :key="lv.id" :value="lv.id">
-          {{ lv.number }} класс
+          {{ lv.number }} {{ $t('groupForm.class') }}
         </option>
       </select>
 
-      <label>Литера</label>
-      <input v-model="form.class_letter" class="inp" placeholder="например: А" maxlength="2"/>
+      <label>{{ $t('groupForm.letter') }}</label>
+      <input v-model="form.class_letter" class="inp" :placeholder="$t('groupForm.letterPlaceholder')" maxlength="2"/>
 
-      <label>Классный руководитель</label>
+      <label>{{ $t('groupForm.homeroomTeacher') }}</label>
       <select v-model.number="form.homeroom_teacher_id" class="inp">
-        <option :value="null">— не выбран —</option>
+        <option :value="null">{{ $t('groupForm.teacherNotSelected') }}</option>
         <option v-for="t in teachers" :key="t.id" :value="t.id">
           {{ t.name }} ({{ t.email }})
         </option>
       </select>
 
       <div class="actions">
-        <button class="btn primary" type="submit">Сохранить</button>
+        <button class="btn primary" type="submit">{{ $t('groupForm.save') }}</button>
       </div>
       <p v-if="error" class="error">{{ error }}</p>
-      <p v-if="ok" class="ok">Сохранено</p>
+      <p v-if="ok" class="ok">{{ $t('groupForm.saved') }}</p>
     </form>
   </div>
 </template>

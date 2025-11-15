@@ -1,19 +1,19 @@
 <template>
   <div class="wrap">
     <div class="col">
-      <h3>Студенты группы {{ groupTitle }}</h3>
+      <h3>{{ $t('groupStudents.title', { groupName: groupTitle }) }}</h3>
       <div class="toolbar">
-        <input v-model="searchIn" class="inp" placeholder="Поиск по ФИО/email/телефону" @input="debounced(loadIn)" />
-        <button class="btn danger" :disabled="!selectedIn.length" @click="detach">Снять из группы</button>
+        <input v-model="searchIn" class="inp" :placeholder="$t('groupStudents.searchPlaceholder')" @input="debounced(loadIn)" />
+        <button class="btn danger" :disabled="!selectedIn.length" @click="detach">{{ $t('groupStudents.removeFromGroup') }}</button>
       </div>
 
       <table class="tbl">
         <thead>
         <tr>
           <th><input type="checkbox" @change="toggleAllIn($event)"/></th>
-          <th>ФИО</th>
-          <th>Email</th>
-          <th>Телефон</th>
+          <th>{{ $t('groupStudents.fullName') }}</th>
+          <th>{{ $t('groupStudents.email') }}</th>
+          <th>{{ $t('groupStudents.phone') }}</th>
         </tr>
         </thead>
         <tbody>
@@ -28,27 +28,27 @@
     </div>
 
     <div class="col">
-      <h3>Подбор студентов</h3>
+      <h3>{{ $t('groupStudents.selectionTitle') }}</h3>
       <div class="toolbar">
-        <label><input type="checkbox" v-model="onlyUnassigned" @change="loadPool"> только без группы</label>
+        <label><input type="checkbox" v-model="onlyUnassigned" @change="loadPool"> {{ $t('groupStudents.onlyUnassigned') }}</label>
         <select v-model.number="filterLevel" class="inp small" @change="loadPool">
-          <option :value="0">Уровень: любой</option>
-          <option v-for="lv in levels" :key="lv.id" :value="lv.id">{{ lv.number }} класс</option>
+          <option :value="0">{{ $t('groupStudents.levelAny') }}</option>
+          <option v-for="lv in levels" :key="lv.id" :value="lv.id">{{ lv.number }} {{ $t('groupStudents.class') }}</option>
         </select>
       </div>
       <div class="toolbar">
-        <input v-model="searchPool" class="inp" placeholder="Поиск" @input="debounced(loadPool)"/>
-        <button class="btn primary" :disabled="!selectedPool.length" @click="attach">Добавить в группу</button>
+        <input v-model="searchPool" class="inp" :placeholder="$t('groupStudents.search')" @input="debounced(loadPool)"/>
+        <button class="btn primary" :disabled="!selectedPool.length" @click="attach">{{ $t('groupStudents.addToGroup') }}</button>
       </div>
 
       <table class="tbl">
         <thead>
         <tr>
           <th><input type="checkbox" @change="toggleAllPool($event)"/></th>
-          <th>ФИО</th>
-          <th>Email</th>
-          <th>Телефон</th>
-          <th>Уровень</th>
+          <th>{{ $t('groupStudents.fullName') }}</th>
+          <th>{{ $t('groupStudents.email') }}</th>
+          <th>{{ $t('groupStudents.phone') }}</th>
+          <th>{{ $t('groupStudents.level') }}</th>
         </tr>
         </thead>
         <tbody>
@@ -70,7 +70,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
+
+const { t } = useI18n()
 
 const route = useRoute()
 const groupId = Number(route.params.id)
@@ -126,7 +129,7 @@ async function attach() {
     await api.post(`/admin/groups/${groupId}/attach-students`, { student_ids: selectedPool.value })
     await Promise.all([loadIn(), loadPool()])
   } catch (e:any) {
-    error.value = e?.data?.message || e?.message || 'Ошибка добавления'
+    error.value = e?.data?.message || e?.message || t('groupStudents.attachError')
     if (e?.data?.mismatched_student_ids) {
       console.warn('Несовпадение уровней у id:', e.data.mismatched_student_ids)
     }
@@ -138,7 +141,7 @@ async function detach() {
     await api.post(`/admin/groups/${groupId}/detach-students`, { student_ids: selectedIn.value })
     await Promise.all([loadIn(), loadPool()])
   } catch (e:any) {
-    error.value = e?.data?.message || e?.message || 'Ошибка снятия'
+    error.value = e?.data?.message || e?.message || t('groupStudents.detachError')
   }
 }
 

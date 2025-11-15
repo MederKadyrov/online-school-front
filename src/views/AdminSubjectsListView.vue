@@ -1,14 +1,14 @@
 <template>
   <div class="card">
     <div class="head">
-      <h3>Предметы</h3>
-      <router-link class="btn" to="/admin/subjects/new">+ Создать</router-link>
+      <h3>{{ $t('subjects.title') }}</h3>
+      <router-link class="btn" to="/admin/subjects/new">+ {{ $t('subjects.create') }}</router-link>
     </div>
 
     <div class="toolbar">
-      <input v-model="search" class="inp" placeholder="Поиск по названию/коду/области" @input="debouncedLoad" />
+      <input v-model="search" class="inp" :placeholder="$t('subjects.searchPlaceholder')" @input="debouncedLoad" />
       <select v-model.number="filterAreaId" class="inp small" @change="load">
-        <option :value="0">Все области</option>
+        <option :value="0">{{ $t('subjects.allAreas') }}</option>
         <option v-for="a in areas" :key="a.id" :value="a.id">
           {{ a.name }}
         </option>
@@ -18,22 +18,20 @@
     <table class="tbl">
       <thead>
       <tr>
-        <th style="width:80px">ID</th>
-        <th>Название предмета</th>
-        <th>Код</th>
-        <th>Образовательная область</th>
-        <th style="width:180px"></th>
+        <th>{{ $t('subjects.name') }}</th>
+        <th>{{ $t('subjects.code') }}</th>
+        <th>{{ $t('subjects.area') }}</th>
+        <th style="width:180px">{{ $t('common.actions') }}</th>
       </tr>
       </thead>
       <tbody>
       <tr v-for="s in rows" :key="s.id">
-        <td>{{ s.id }}</td>
         <td>{{ s.name }}</td>
         <td><code>{{ s.code }}</code></td>
         <td>{{ s.area?.name || '—' }}</td>
         <td class="actions">
-          <router-link class="btn" :to="`/admin/subjects/${s.id}/edit`">Редактировать</router-link>
-          <button class="btn danger" @click="removeRow(s)">Удалить</button>
+          <router-link class="btn" :to="`/admin/subjects/${s.id}/edit`">{{ $t('common.edit') }}</router-link>
+          <button class="btn danger" @click="removeRow(s)">{{ $t('common.delete') }}</button>
         </td>
       </tr>
       </tbody>
@@ -45,7 +43,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
+
+const { t } = useI18n()
 
 const rows = ref<any[]>([])
 const areas = ref<any[]>([])
@@ -67,7 +68,7 @@ async function load() {
     const { data } = await api.get('/admin/subjects', { params })
     rows.value = data
   } catch (e:any) {
-    error.value = e?.data?.message || e?.message || 'Ошибка загрузки'
+    error.value = e?.data?.message || e?.message || t('subjects.loadError')
   }
 }
 
@@ -81,12 +82,12 @@ function debounce(fn: Function, ms=400) {
 const debouncedLoad = debounce(load, 400)
 
 async function removeRow(s:any) {
-  if (!confirm(`Удалить предмет "${s.name}"?`)) return
+  if (!confirm(t('subjects.deleteConfirm', { name: s.name }))) return
   try {
     await api.delete(`/admin/subjects/${s.id}`)
     await load()
   } catch (e:any) {
-    alert(e?.data?.message || e?.message || 'Не удалось удалить')
+    alert(e?.data?.message || e?.message || t('subjects.deleteError'))
   }
 }
 
