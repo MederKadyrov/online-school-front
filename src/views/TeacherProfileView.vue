@@ -1,19 +1,19 @@
 <template>
   <div class="profile-view">
     <div class="page-header">
-      <h1>👤 Мой профиль</h1>
-      <p class="subtitle">Личная информация и настройки</p>
+      <h1>👤 {{ $t('teacherProfile.title') }}</h1>
+      <p class="subtitle">{{ $t('teacherProfile.subtitle') }}</p>
     </div>
 
     <div v-if="loading" class="loading-spinner">
       <div class="spinner"></div>
-      <p>Загрузка профиля...</p>
+      <p>{{ $t('teacherProfile.loadingProfile') }}</p>
     </div>
 
     <div v-else-if="error" class="error-message">
       <span class="error-icon">⚠️</span>
       <p>{{ error }}</p>
-      <button @click="fetchProfile" class="btn-retry">Попробовать снова</button>
+      <button @click="fetchProfile" class="btn-retry">{{ $t('teacherProfile.tryAgain') }}</button>
     </div>
 
     <div v-else class="profile-content">
@@ -24,14 +24,14 @@
           :class="{ active: activeTab === 'profile' }"
           @click="activeTab = 'profile'"
         >
-          📋 Профиль
+          📋 {{ $t('teacherProfile.profileTab') }}
         </button>
         <button
           class="tab-button"
           :class="{ active: activeTab === 'password' }"
           @click="activeTab = 'password'"
         >
-          🔒 Пароль
+          🔒 {{ $t('teacherProfile.passwordTab') }}
         </button>
       </div>
 
@@ -40,33 +40,33 @@
         <!-- Личная информация -->
         <div class="profile-card">
           <div class="card-header">
-            <h2>📋 Личная информация</h2>
+            <h2>📋 {{ $t('teacherProfile.personalInfo') }}</h2>
           </div>
           <div class="card-body">
             <div class="info-grid">
               <div class="info-item">
-                <span class="info-label">Фамилия:</span>
+                <span class="info-label">{{ $t('teacherProfile.lastName') }}:</span>
                 <span class="info-value">{{ profile.last_name || '—' }}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">Имя:</span>
+                <span class="info-label">{{ $t('teacherProfile.firstName') }}:</span>
                 <span class="info-value">{{ profile.first_name || '—' }}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">Отчество:</span>
+                <span class="info-label">{{ $t('teacherProfile.middleName') }}:</span>
                 <span class="info-value">{{ profile.middle_name || '—' }}</span>
               </div>
-              
+
               <div class="info-item">
-                <span class="info-label">Email:</span>
+                <span class="info-label">{{ $t('teacherProfile.email') }}:</span>
                 <span class="info-value">{{ profile.email || '—' }}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">Телефон:</span>
+                <span class="info-label">{{ $t('teacherProfile.phone') }}:</span>
                 <span class="info-value">{{ profile.phone || '—' }}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">Дата регистрации:</span>
+                <span class="info-label">{{ $t('teacherProfile.registrationDate') }}:</span>
                 <span class="info-value">{{ formatDate(profile.created_at) }}</span>
               </div>
             </div>
@@ -76,7 +76,7 @@
         <!-- Информация о преподавании -->
         <div v-if="profile.subjects && profile.subjects.length > 0" class="profile-card">
           <div class="card-header">
-            <h2>📚 Преподаваемые предметы</h2>
+            <h2>📚 {{ $t('teacherProfile.teachingSubjects') }}</h2>
           </div>
           <div class="card-body">
             <div class="subjects-list">
@@ -92,12 +92,12 @@
       <div v-if="activeTab === 'password'" class="tab-content">
         <div class="profile-card">
           <div class="card-header">
-            <h2>🔒 Смена пароля</h2>
+            <h2>🔒 {{ $t('teacherProfile.changePassword') }}</h2>
           </div>
           <div class="card-body">
             <form @submit.prevent="changePassword" class="password-form">
               <div class="form-group">
-                <label for="current_password">Текущий пароль:</label>
+                <label for="current_password">{{ $t('teacherProfile.currentPassword') }}:</label>
                 <input
                   type="password"
                   id="current_password"
@@ -107,7 +107,7 @@
                 />
               </div>
               <div class="form-group">
-                <label for="new_password">Новый пароль:</label>
+                <label for="new_password">{{ $t('teacherProfile.newPassword') }}:</label>
                 <input
                   type="password"
                   id="new_password"
@@ -116,10 +116,10 @@
                   required
                   minlength="6"
                 />
-                <small class="form-hint">Минимум 6 символов</small>
+                <small class="form-hint">{{ $t('teacherProfile.minChars') }}</small>
               </div>
               <div class="form-group">
-                <label for="new_password_confirmation">Подтвердите новый пароль:</label>
+                <label for="new_password_confirmation">{{ $t('teacherProfile.confirmPassword') }}:</label>
                 <input
                   type="password"
                   id="new_password_confirmation"
@@ -141,7 +141,7 @@
                 class="btn btn-primary"
                 :disabled="changingPassword"
               >
-                {{ changingPassword ? 'Сохранение...' : 'Изменить пароль' }}
+                {{ changingPassword ? $t('teacherProfile.saving') : $t('teacherProfile.changePasswordBtn') }}
               </button>
             </form>
           </div>
@@ -153,7 +153,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
+
+const { t } = useI18n()
 
 interface Profile {
   id: number
@@ -204,7 +207,7 @@ async function fetchProfile() {
     const res = await api.get('/teacher/profile')
     profile.value = res.data
   } catch (e: any) {
-    error.value = e?.response?.data?.message || e?.message || 'Не удалось загрузить профиль'
+    error.value = e?.response?.data?.message || e?.message || t('teacherProfile.loadError')
   } finally {
     loading.value = false
   }
@@ -212,7 +215,7 @@ async function fetchProfile() {
 
 async function changePassword() {
   if (passwordForm.value.new_password !== passwordForm.value.new_password_confirmation) {
-    passwordError.value = 'Пароли не совпадают'
+    passwordError.value = t('teacherProfile.passwordMismatch')
     return
   }
 
@@ -222,14 +225,14 @@ async function changePassword() {
 
   try {
     await api.post('/teacher/change-password', passwordForm.value)
-    passwordSuccess.value = 'Пароль успешно изменен'
+    passwordSuccess.value = t('teacherProfile.passwordChanged')
     passwordForm.value = {
       current_password: '',
       new_password: '',
       new_password_confirmation: ''
     }
   } catch (e: any) {
-    passwordError.value = e?.response?.data?.message || e?.message || 'Не удалось изменить пароль'
+    passwordError.value = e?.response?.data?.message || e?.message || t('teacherProfile.changePasswordError')
   } finally {
     changingPassword.value = false
   }

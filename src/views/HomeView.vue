@@ -18,9 +18,6 @@
                 <path d="M5 12h14m-7-7 7 7-7 7"/>
               </svg>
             </router-link>
-            <router-link to="/register" class="btn btn-secondary">
-              Регистрация
-            </router-link>
           </div>
         </div>
         <div class="hero-image">

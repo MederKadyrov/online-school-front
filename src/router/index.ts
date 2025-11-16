@@ -4,7 +4,6 @@ import type { RouteRecordRaw } from 'vue-router'
 import Home from '../views/HomeView.vue'
 import Login from '../views/LoginView.vue'
 import RegisterStudentWizard from '../views/RegisterStudentWizard.vue'
-import TeacherLessons from '../views/TeacherLessonsView.vue'
 import { useAuthStore } from '../stores/auth'
 import AdminRegisterTeacher from '../views/AdminRegisterTeacherView.vue'
 import StudentGrades from '../views/StudentGradesView.vue'
@@ -15,14 +14,6 @@ const routes: RouteRecordRaw[] = [
     { path: '/login', component: Login },
     { path: '/forgot-password', component: ForgotPassword },
     { path: '/register-student', component: RegisterStudentWizard },
-    {
-        path: '/teacher/lessons',
-        component: TeacherLessons,
-        meta: {
-            auth: true,
-            breadcrumb: { label: 'Уроки', icon: '📚' }
-        }
-    },
     {
         path: '/admin/register-teacher',
         component: AdminRegisterTeacher,

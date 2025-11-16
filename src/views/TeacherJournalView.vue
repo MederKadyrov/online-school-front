@@ -1,13 +1,13 @@
 <template>
   <div class="teacher-journal-view">
-    <h1>Журнал оценок</h1>
+    <h1>{{ $t('teacherJournal.title') }}</h1>
 
     <!-- Фильтры -->
     <div class="filters">
       <div class="filter-group">
-        <label>Группа:</label>
+        <label>{{ $t('teacherJournal.group') }}:</label>
         <select v-model="filters.group_id" @change="onGroupChange">
-          <option value="">Выберите группу</option>
+          <option value="">{{ $t('teacherJournal.selectGroup') }}</option>
           <option v-for="group in groups" :key="group.id" :value="group.id">
             {{ group.display_name }}
           </option>
@@ -15,9 +15,9 @@
       </div>
 
       <div class="filter-group">
-        <label>Курс:</label>
+        <label>{{ $t('teacherJournal.course') }}:</label>
         <select v-model="filters.course_id" @change="onCourseChange" :disabled="!filters.group_id">
-          <option value="">Выберите курс</option>
+          <option value="">{{ $t('teacherJournal.selectCourse') }}</option>
           <option v-for="course in courses" :key="course.id" :value="course.id">
             {{ course.display_name }}
           </option>
@@ -25,9 +25,9 @@
       </div>
 
       <div class="filter-group">
-        <label>Модуль:</label>
+        <label>{{ $t('teacherJournal.module') }}:</label>
         <select v-model="filters.module_id" @change="loadJournal" :disabled="!filters.course_id">
-          <option value="all">Все модули</option>
+          <option value="all">{{ $t('teacherJournal.allModules') }}</option>
           <option v-for="module in modules" :key="module.id" :value="module.id">
             {{ module.display_name }}
           </option>
@@ -35,35 +35,35 @@
       </div>
 
       <button @click="exportJournal" :disabled="!journalData.students?.length" class="export-btn">
-        📄 Экспорт
+        📄 {{ $t('teacherJournal.export') }}
       </button>
     </div>
 
     <!-- Статистика -->
     <div v-if="journalData.summary" class="summary">
       <div class="summary-item">
-        <span>Всего студентов:</span>
+        <span>{{ $t('teacherJournal.totalStudents') }}:</span>
         <strong>{{ journalData.summary.total_students }}</strong>
       </div>
       <div class="summary-item">
-        <span>Всего оценок:</span>
+        <span>{{ $t('teacherJournal.totalGrades') }}:</span>
         <strong>{{ journalData.summary.total_grades }}</strong>
       </div>
       <div class="summary-item">
-        <span>Средний балл:</span>
+        <span>{{ $t('teacherJournal.averageGrade') }}:</span>
         <strong>{{ journalData.summary.average_grade?.toFixed(2) || 'N/A' }}</strong>
       </div>
     </div>
 
     <!-- Таблица журнала -->
-    <div v-if="loading" class="loading">Загрузка...</div>
+    <div v-if="loading" class="loading">{{ $t('teacherJournal.loading') }}</div>
 
     <div v-else-if="journalData.students?.length" class="journal-table-wrapper">
       <table class="journal-table">
         <thead>
           <tr class="header-row-1">
             <th rowspan="3" class="sticky-col">№</th>
-            <th rowspan="3" class="sticky-col student-name-col">Студент</th>
+            <th rowspan="3" class="sticky-col student-name-col">{{ $t('teacherJournal.student') }}</th>
             <template v-for="module in journalData.modules" :key="module.module_id">
               <th
                 :colspan="(paragraphsByModule[module.module_id]?.length || 0) * 2 + 1"
@@ -72,10 +72,10 @@
                 {{ module.display_name }}
               </th>
             </template>
-            <th rowspan="3" class="final-grade-col">Годовая</th>
-            <th v-if="journalData.course?.has_exam_grades" rowspan="3" class="final-grade-col">Экзамен</th>
-            <th v-if="journalData.course?.has_exam_grades" rowspan="3" class="final-grade-col">Итоговая</th>
-            <th rowspan="3" class="average-col">Средний балл</th>
+            <th rowspan="3" class="final-grade-col">{{ $t('teacherJournal.yearly') }}</th>
+            <th v-if="journalData.course?.has_exam_grades" rowspan="3" class="final-grade-col">{{ $t('teacherJournal.exam') }}</th>
+            <th v-if="journalData.course?.has_exam_grades" rowspan="3" class="final-grade-col">{{ $t('teacherJournal.final') }}</th>
+            <th rowspan="3" class="average-col">{{ $t('teacherJournal.averageGrade') }}</th>
           </tr>
           <tr class="header-row-2">
             <template v-for="module in journalData.modules" :key="'para-' + module.module_id">
@@ -84,14 +84,14 @@
                   {{ paragraph.display_name }}
                 </th>
               </template>
-              <th rowspan="2" class="module-grade-header">МО</th>
+              <th rowspan="2" class="module-grade-header">{{ $t('teacherJournal.moduleGradeShort') }}</th>
             </template>
           </tr>
           <tr class="header-row-3">
             <template v-for="module in journalData.modules" :key="'sub-' + module.module_id">
               <template v-for="paragraph in paragraphsByModule[module.module_id]" :key="'subh-' + paragraph.paragraph_id">
-                <th class="subheader">З</th>
-                <th class="subheader">Т</th>
+                <th class="subheader">{{ $t('teacherJournal.assignmentShort') }}</th>
+                <th class="subheader">{{ $t('teacherJournal.quizShort') }}</th>
               </template>
             </template>
           </tr>
@@ -133,7 +133,7 @@
                   getModuleCellClass(module.module_number)
                 ]"
                 @click="openModuleGradeModal(student, module)"
-                :title="student.grades_by_module[module.module_id]?.graded_at ? 'Выставлено: ' + formatDate(student.grades_by_module[module.module_id]!.graded_at!) + ' (клик для редактирования)' : 'Клик для выставления оценки'"
+                :title="student.grades_by_module[module.module_id]?.graded_at ? t('teacherJournal.gradedAt', { date: formatDate(student.grades_by_module[module.module_id]!.graded_at!) }) : t('teacherJournal.clickToGrade')"
               >
                 {{ student.grades_by_module[module.module_id]?.grade || '—' }}
               </td>
@@ -144,7 +144,7 @@
               class="final-grade-cell editable"
               :class="getGradeCellClass(student.yearly_grade?.grade)"
               @click="openFinalGradeModal(student, 'yearly')"
-              :title="student.yearly_grade?.graded_at ? 'Выставлено: ' + formatDate(student.yearly_grade.graded_at) + ' (клик для редактирования)' : 'Клик для выставления годовой оценки'"
+              :title="student.yearly_grade?.graded_at ? t('teacherJournal.gradedAt', { date: formatDate(student.yearly_grade.graded_at) }) : t('teacherJournal.clickToGradeYearly')"
             >
               {{ student.yearly_grade?.grade || '—' }}
             </td>
@@ -155,7 +155,7 @@
               class="final-grade-cell editable"
               :class="getGradeCellClass(student.exam_grade?.grade)"
               @click="openFinalGradeModal(student, 'exam')"
-              :title="student.exam_grade?.graded_at ? 'Выставлено: ' + formatDate(student.exam_grade.graded_at) + ' (клик для редактирования)' : 'Клик для выставления экзаменационной оценки'"
+              :title="student.exam_grade?.graded_at ? t('teacherJournal.gradedAt', { date: formatDate(student.exam_grade.graded_at) }) : t('teacherJournal.clickToGradeExam')"
             >
               {{ student.exam_grade?.grade || '—' }}
             </td>
@@ -166,7 +166,7 @@
               class="final-grade-cell editable"
               :class="getGradeCellClass(student.final_grade?.grade)"
               @click="openFinalGradeModal(student, 'final')"
-              :title="student.final_grade?.graded_at ? 'Выставлено: ' + formatDate(student.final_grade.graded_at) + ' (клик для редактирования)' : 'Клик для выставления итоговой оценки'"
+              :title="student.final_grade?.graded_at ? t('teacherJournal.gradedAt', { date: formatDate(student.final_grade.graded_at) }) : t('teacherJournal.clickToGradeFinal')"
             >
               {{ student.final_grade?.grade || '—' }}
             </td>
@@ -178,53 +178,53 @@
     </div>
 
     <div v-else-if="filters.group_id && filters.course_id" class="no-data">
-      Нет данных для отображения
+      {{ $t('teacherJournal.noData') }}
     </div>
 
     <div v-else class="no-data">
-      Выберите группу и курс для просмотра журнала
+      {{ $t('teacherJournal.selectGroupAndCourse') }}
     </div>
 
     <!-- Модалка для выставления модульной оценки -->
     <div v-if="showModuleGradeModal" class="modal-overlay" @click="closeModuleGradeModal">
       <div class="modal-content" @click.stop>
-        <h2>Модульная оценка</h2>
+        <h2>{{ $t('teacherJournal.moduleGrade') }}</h2>
 
         <div v-if="moduleGradeForm.student" class="grade-form">
           <div class="detail-row">
-            <span class="label">Студент:</span>
+            <span class="label">{{ $t('teacherJournal.student') }}:</span>
             <span class="value">{{ moduleGradeForm.student.student_name }}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Модуль:</span>
+            <span class="label">{{ $t('teacherJournal.module') }}:</span>
             <span class="value">{{ moduleGradeForm.module?.display_name }} - {{ moduleGradeForm.module?.title }}</span>
           </div>
 
           <div class="form-group">
-            <label for="grade">Оценка (2-5):</label>
+            <label for="grade">{{ $t('teacherJournal.gradeLabel') }}:</label>
             <select id="grade" v-model.number="moduleGradeForm.grade_5" required>
-              <option :value="null">Выберите оценку</option>
-              <option :value="5">5 (Отлично)</option>
-              <option :value="4">4 (Хорошо)</option>
-              <option :value="3">3 (Удовлетворительно)</option>
-              <option :value="2">2 (Неудовлетворительно)</option>
+              <option :value="null">{{ $t('teacherJournal.selectGrade') }}</option>
+              <option :value="5">5 ({{ $t('teacherJournal.excellent') }})</option>
+              <option :value="4">4 ({{ $t('teacherJournal.good') }})</option>
+              <option :value="3">3 ({{ $t('teacherJournal.satisfactory') }})</option>
+              <option :value="2">2 ({{ $t('teacherJournal.unsatisfactory') }})</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label for="comment">Комментарий (необязательно):</label>
+            <label for="comment">{{ $t('teacherJournal.comment') }}:</label>
             <textarea
               id="comment"
               v-model="moduleGradeForm.teacher_comment"
               rows="3"
               maxlength="1000"
-              placeholder="Добавьте комментарий к оценке..."
+              :placeholder="$t('teacherJournal.commentPlaceholder')"
             ></textarea>
           </div>
 
           <div class="modal-actions">
             <button @click="saveModuleGrade" :disabled="moduleGradeForm.grade_5 === null || saving" class="save-btn">
-              {{ saving ? 'Сохранение...' : 'Сохранить' }}
+              {{ saving ? $t('teacherJournal.saving') : $t('teacherJournal.save') }}
             </button>
             <button
               v-if="moduleGradeForm.id"
@@ -232,10 +232,10 @@
               :disabled="saving"
               class="delete-btn"
             >
-              Удалить оценку
+              {{ $t('teacherJournal.deleteGrade') }}
             </button>
             <button @click="closeModuleGradeModal" :disabled="saving" class="cancel-btn">
-              Отмена
+              {{ $t('teacherJournal.cancel') }}
             </button>
           </div>
         </div>
@@ -249,35 +249,35 @@
 
         <div v-if="finalGradeForm.student" class="grade-form">
           <div class="detail-row">
-            <span class="label">Студент:</span>
+            <span class="label">{{ $t('teacherJournal.student') }}:</span>
             <span class="value">{{ finalGradeForm.student.student_name }}</span>
           </div>
 
           <div class="form-group">
-            <label for="final-grade">Оценка (2-5):</label>
+            <label for="final-grade">{{ $t('teacherJournal.gradeLabel') }}:</label>
             <select id="final-grade" v-model.number="finalGradeForm.grade_5" required>
-              <option :value="null">Выберите оценку</option>
-              <option :value="5">5 (Отлично)</option>
-              <option :value="4">4 (Хорошо)</option>
-              <option :value="3">3 (Удовлетворительно)</option>
-              <option :value="2">2 (Неудовлетворительно)</option>
+              <option :value="null">{{ $t('teacherJournal.selectGrade') }}</option>
+              <option :value="5">5 ({{ $t('teacherJournal.excellent') }})</option>
+              <option :value="4">4 ({{ $t('teacherJournal.good') }})</option>
+              <option :value="3">3 ({{ $t('teacherJournal.satisfactory') }})</option>
+              <option :value="2">2 ({{ $t('teacherJournal.unsatisfactory') }})</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label for="final-comment">Комментарий (необязательно):</label>
+            <label for="final-comment">{{ $t('teacherJournal.comment') }}:</label>
             <textarea
               id="final-comment"
               v-model="finalGradeForm.teacher_comment"
               rows="3"
               maxlength="1000"
-              placeholder="Добавьте комментарий к оценке..."
+              :placeholder="$t('teacherJournal.commentPlaceholder')"
             ></textarea>
           </div>
 
           <div class="modal-actions">
             <button @click="saveFinalGrade" :disabled="finalGradeForm.grade_5 === null || saving" class="save-btn">
-              {{ saving ? 'Сохранение...' : 'Сохранить' }}
+              {{ saving ? $t('teacherJournal.saving') : $t('teacherJournal.save') }}
             </button>
             <button
               v-if="finalGradeForm.id"
@@ -285,10 +285,10 @@
               :disabled="saving"
               class="delete-btn"
             >
-              Удалить оценку
+              {{ $t('teacherJournal.deleteGrade') }}
             </button>
             <button @click="closeFinalGradeModal" :disabled="saving" class="cancel-btn">
-              Отмена
+              {{ $t('teacherJournal.cancel') }}
             </button>
           </div>
         </div>
@@ -298,53 +298,53 @@
     <!-- Модалка с деталями оценки (для заданий и тестов) -->
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
-        <h2>Детали оценки</h2>
+        <h2>{{ $t('teacherJournal.gradeDetails') }}</h2>
 
         <div v-if="gradeDetails" class="grade-details">
           <div class="detail-row">
-            <span class="label">Студент:</span>
+            <span class="label">{{ $t('teacherJournal.student') }}:</span>
             <span class="value">{{ gradeDetails.student_name }}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Группа:</span>
+            <span class="label">{{ $t('teacherJournal.group') }}:</span>
             <span class="value">{{ gradeDetails.group }}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Предмет:</span>
+            <span class="label">{{ $t('teacherJournal.subject') }}:</span>
             <span class="value">{{ gradeDetails.subject }}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Тип:</span>
+            <span class="label">{{ $t('teacherJournal.type') }}:</span>
             <span class="value">{{ getGradeType(gradeDetails.type) }}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Название:</span>
+            <span class="label">{{ $t('teacherJournal.itemTitle') }}:</span>
             <span class="value">{{ gradeDetails.title }}</span>
           </div>
           <div v-if="gradeDetails.type === 'QuizAttempt'" class="detail-row">
-            <span class="label">Баллы:</span>
+            <span class="label">{{ $t('teacherJournal.points') }}:</span>
             <span class="value">{{ gradeDetails.score }} / {{ gradeDetails.max_points }}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Оценка:</span>
+            <span class="label">{{ $t('teacherJournal.gradeValue') }}:</span>
             <span class="value grade-badge" :class="getGradeBadgeClass(gradeDetails.grade_5)">
               {{ gradeDetails.grade_5 }}
             </span>
           </div>
           <div class="detail-row">
-            <span class="label">Дата:</span>
+            <span class="label">{{ $t('teacherJournal.date') }}:</span>
             <span class="value">{{ formatDate(gradeDetails.graded_at) }}</span>
           </div>
 
           <div v-if="gradeDetails.teacher_comment" class="detail-row full-width">
-            <span class="label">Комментарий учителя:</span>
+            <span class="label">{{ $t('teacherJournal.teacherComment') }}:</span>
             <p class="comment">{{ gradeDetails.teacher_comment }}</p>
           </div>
         </div>
 
-        <div v-else class="loading">Загрузка...</div>
+        <div v-else class="loading">{{ $t('teacherJournal.loading') }}</div>
 
-        <button @click="closeModal" class="close-btn">Закрыть</button>
+        <button @click="closeModal" class="close-btn">{{ $t('teacherJournal.close') }}</button>
       </div>
     </div>
   </div>
@@ -352,7 +352,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
+
+const { t } = useI18n()
 
 interface Group {
   id: number
@@ -698,12 +701,11 @@ function closeFinalGradeModal() {
 }
 
 function getFinalGradeTitle(): string {
-  const titles = {
-    yearly: 'Годовая оценка',
-    exam: 'Экзаменационная оценка',
-    final: 'Итоговая оценка'
-  }
-  return titles[finalGradeForm.value.gradeType || 'yearly'] || 'Финальная оценка'
+  const gradeType = finalGradeForm.value.gradeType || 'yearly'
+  if (gradeType === 'yearly') return t('teacherJournal.yearlyGrade')
+  if (gradeType === 'exam') return t('teacherJournal.examGrade')
+  if (gradeType === 'final') return t('teacherJournal.finalGrade')
+  return t('teacherJournal.finalGrade')
 }
 
 async function saveFinalGrade() {
@@ -730,7 +732,7 @@ async function saveFinalGrade() {
     closeFinalGradeModal()
   } catch (error: any) {
     console.error('Ошибка сохранения финальной оценки:', error)
-    alert('Ошибка сохранения оценки: ' + (error.response?.data?.message || error.message))
+    alert(t('teacherJournal.saveError') + ': ' + (error.response?.data?.message || error.message))
   } finally {
     saving.value = false
   }
@@ -740,7 +742,7 @@ async function deleteFinalGrade() {
   if (!finalGradeForm.value.id) return
 
   const gradeTypeName = getFinalGradeTitle().toLowerCase()
-  if (!confirm(`Вы уверены, что хотите удалить ${gradeTypeName}?`)) return
+  if (!confirm(t('teacherJournal.confirmDelete', { gradeName: gradeTypeName }))) return
 
   saving.value = true
   try {
@@ -751,7 +753,7 @@ async function deleteFinalGrade() {
     closeFinalGradeModal()
   } catch (error: any) {
     console.error('Ошибка удаления финальной оценки:', error)
-    alert('Ошибка удаления оценки: ' + (error.response?.data?.message || error.message))
+    alert(t('teacherJournal.deleteError') + ': ' + (error.response?.data?.message || error.message))
   } finally {
     saving.value = false
   }
@@ -782,13 +784,11 @@ function getGradeBadgeClass(grade: number | null): string {
 }
 
 function getGradeType(type: string): string {
-  const types: Record<string, string> = {
-    'QuizAttempt': 'Тест',
-    'AssignmentSubmission': 'Задание',
-    'Module': 'Модуль',
-    'Lesson': 'Урок'
-  }
-  return types[type] || type
+  if (type === 'QuizAttempt') return t('teacherJournal.typeQuiz')
+  if (type === 'AssignmentSubmission') return t('teacherJournal.typeAssignment')
+  if (type === 'Module') return t('teacherJournal.typeModule')
+  if (type === 'Lesson') return t('teacherJournal.typeLesson')
+  return type
 }
 
 function formatDate(dateString: string): string {

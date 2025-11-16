@@ -3,8 +3,8 @@
     <div class="registration-card">
       <!-- Header -->
       <div class="registration-header">
-        <h1>Регистрация ученика</h1>
-        <p class="subtitle">Заполните форму для регистрации в онлайн-школе</p>
+        <h1>{{ $t('studentRegistration.title') }}</h1>
+        <p class="subtitle">{{ $t('studentRegistration.subtitle') }}</p>
       </div>
 
       <!-- Индикатор шагов -->
@@ -13,91 +13,91 @@
           <div class="step-circle">
             <span class="step-icon">👤</span>
           </div>
-          <span class="step-label">Личные данные</span>
+          <span class="step-label">{{ $t('studentRegistration.step1Label') }}</span>
         </div>
         <div class="step-line"></div>
         <div :class="['step-item', step===2 && 'active']">
           <div class="step-circle">
             <span class="step-icon">📄</span>
           </div>
-          <span class="step-label">Документы</span>
+          <span class="step-label">{{ $t('studentRegistration.step2Label') }}</span>
         </div>
       </div>
 
       <!-- Шаг 1 -->
       <div v-if="step===1" class="step-content">
         <div class="section">
-          <h2 class="section-title">Родитель / Законный представитель</h2>
+          <h2 class="section-title">{{ $t('studentRegistration.guardianSection') }}</h2>
 
           <div class="form-group">
-            <label class="form-label">Кто заполняет</label>
+            <label class="form-label">{{ $t('studentRegistration.guardianTypeLabel') }}</label>
             <div class="radio-group">
               <label class="radio-label">
                 <input type="radio" value="parent" v-model="guardianType" class="radio-input" />
-                <span>Родитель</span>
+                <span>{{ $t('studentRegistration.parent') }}</span>
               </label>
               <label class="radio-label">
                 <input type="radio" value="representative" v-model="guardianType" class="radio-input" />
-                <span>Законный представитель</span>
+                <span>{{ $t('studentRegistration.representative') }}</span>
               </label>
             </div>
           </div>
 
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">Фамилия <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.lastName') }} <span class="required">*</span></label>
               <input
                 v-model="g.last_name"
                 :class="['form-input', errors['guardian.last_name'] && 'input-error']"
-                placeholder="Введите фамилию"
+                :placeholder="$t('studentRegistration.lastNamePlaceholder')"
               />
               <small class="error-message" v-if="errors['guardian.last_name']">{{ errors['guardian.last_name'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Имя <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.firstName') }} <span class="required">*</span></label>
               <input
                 v-model="g.first_name"
                 :class="['form-input', errors['guardian.first_name'] && 'input-error']"
-                placeholder="Введите имя"
+                :placeholder="$t('studentRegistration.firstNamePlaceholder')"
               />
               <small class="error-message" v-if="errors['guardian.first_name']">{{ errors['guardian.first_name'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Отчество</label>
+              <label class="form-label">{{ $t('studentRegistration.middleName') }}</label>
               <input
                 v-model="g.middle_name"
                 :class="['form-input', errors['guardian.middle_name'] && 'input-error']"
-                placeholder="Введите отчество"
+                :placeholder="$t('studentRegistration.middleNamePlaceholder')"
               />
               <small class="error-message" v-if="errors['guardian.middle_name']">{{ errors['guardian.middle_name'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Пол <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.sex') }} <span class="required">*</span></label>
               <select
                 v-model="g.sex"
                 :class="['form-input', errors['guardian.sex'] && 'input-error']"
               >
-                <option value="male">Мужской</option>
-                <option value="female">Женский</option>
+                <option value="male">{{ $t('studentRegistration.male') }}</option>
+                <option value="female">{{ $t('studentRegistration.female') }}</option>
               </select>
               <small class="error-message" v-if="errors['guardian.sex']">{{ errors['guardian.sex'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Гражданство <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.citizenship') }} <span class="required">*</span></label>
               <select
                 v-model="g.citizenship"
                 :class="['form-input', errors['guardian.citizenship'] && 'input-error']"
               >
-                <option value="">Выберите страну</option>
-                <option value="KG">Кыргызстан</option>
-                <option value="RU">Российская Федерация</option>
-                <option value="UZ">Узбекистан</option>
-                <option value="TJ">Таджикистан</option>
-                <option value="KZ">Казахстан</option>
+                <option value="">{{ $t('studentRegistration.selectCountry') }}</option>
+                <option value="KG">{{ $t('studentRegistration.kyrgyzstan') }}</option>
+                <option value="RU">{{ $t('studentRegistration.russia') }}</option>
+                <option value="UZ">{{ $t('studentRegistration.uzbekistan') }}</option>
+                <option value="TJ">{{ $t('studentRegistration.tajikistan') }}</option>
+                <option value="KZ">{{ $t('studentRegistration.kazakhstan') }}</option>
                 <option v-for="country in otherCountries" :key="country.code" :value="country.code">
                   {{ country.name }}
                 </option>
@@ -106,7 +106,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">PIN (14 цифр) <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.pin') }} <span class="required">*</span></label>
               <input
                 v-model="g.pin"
                 :class="['form-input', errors['guardian.pin'] && 'input-error']"
@@ -117,7 +117,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Телефон <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.phone') }} <span class="required">*</span></label>
               <input
                 v-model="g.phone"
                 :class="['form-input', errors['guardian.phone'] && 'input-error']"
@@ -127,7 +127,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Email <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.email') }} <span class="required">*</span></label>
               <input
                 type="email"
                 v-model="g.email"
@@ -138,11 +138,11 @@
             </div>
 
             <div class="form-group form-group-full">
-              <label class="form-label">Адрес проживания <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.address') }} <span class="required">*</span></label>
               <input
                 v-model="g.address"
                 :class="['form-input', errors['guardian.address'] && 'input-error']"
-                placeholder="Город, улица, дом, квартира"
+                :placeholder="$t('studentRegistration.addressPlaceholder')"
               />
               <small class="error-message" v-if="errors['guardian.address']">{{ errors['guardian.address'] }}</small>
             </div>
@@ -150,41 +150,41 @@
         </div>
 
         <div class="section">
-          <h2 class="section-title">Данные ученика</h2>
+          <h2 class="section-title">{{ $t('studentRegistration.studentSection') }}</h2>
 
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">Фамилия <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.lastName') }} <span class="required">*</span></label>
               <input
                 v-model="s.last_name"
                 :class="['form-input', errors['student.last_name'] && 'input-error']"
-                placeholder="Введите фамилию"
+                :placeholder="$t('studentRegistration.lastNamePlaceholder')"
               />
               <small class="error-message" v-if="errors['student.last_name']">{{ errors['student.last_name'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Имя <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.firstName') }} <span class="required">*</span></label>
               <input
                 v-model="s.first_name"
                 :class="['form-input', errors['student.first_name'] && 'input-error']"
-                placeholder="Введите имя"
+                :placeholder="$t('studentRegistration.firstNamePlaceholder')"
               />
               <small class="error-message" v-if="errors['student.first_name']">{{ errors['student.first_name'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Отчество</label>
+              <label class="form-label">{{ $t('studentRegistration.middleName') }}</label>
               <input
                 v-model="s.middle_name"
                 :class="['form-input', errors['student.middle_name'] && 'input-error']"
-                placeholder="Введите отчество"
+                :placeholder="$t('studentRegistration.middleNamePlaceholder')"
               />
               <small class="error-message" v-if="errors['student.middle_name']">{{ errors['student.middle_name'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">PIN ученика (14 цифр) <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.studentPin') }} <span class="required">*</span></label>
               <input
                 v-model="s.pin"
                 :class="['form-input', errors['student.pin'] && 'input-error']"
@@ -195,29 +195,29 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Пол <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.sex') }} <span class="required">*</span></label>
               <select
                 v-model="s.sex"
                 :class="['form-input', errors['student.sex'] && 'input-error']"
               >
-                <option value="male">Мужской</option>
-                <option value="female">Женский</option>
+                <option value="male">{{ $t('studentRegistration.male') }}</option>
+                <option value="female">{{ $t('studentRegistration.female') }}</option>
               </select>
               <small class="error-message" v-if="errors['student.sex']">{{ errors['student.sex'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Гражданство <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.citizenship') }} <span class="required">*</span></label>
               <select
                 v-model="s.citizenship"
                 :class="['form-input', errors['student.citizenship'] && 'input-error']"
               >
-                <option value="">Выберите страну</option>
-                <option value="KG">Кыргызстан</option>
-                <option value="RU">Российская Федерация</option>
-                <option value="UZ">Узбекистан</option>
-                <option value="TJ">Таджикистан</option>
-                <option value="KZ">Казахстан</option>
+                <option value="">{{ $t('studentRegistration.selectCountry') }}</option>
+                <option value="KG">{{ $t('studentRegistration.kyrgyzstan') }}</option>
+                <option value="RU">{{ $t('studentRegistration.russia') }}</option>
+                <option value="UZ">{{ $t('studentRegistration.uzbekistan') }}</option>
+                <option value="TJ">{{ $t('studentRegistration.tajikistan') }}</option>
+                <option value="KZ">{{ $t('studentRegistration.kazakhstan') }}</option>
                 <option v-for="country in otherCountries" :key="country.code" :value="country.code">
                   {{ country.name }}
                 </option>
@@ -226,7 +226,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Дата рождения <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.birthDate') }} <span class="required">*</span></label>
               <input
                 type="date"
                 v-model="s.birth_date"
@@ -237,21 +237,21 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Уровень (класс) <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.level') }} <span class="required">*</span></label>
               <select
                 v-model.number="level_id"
                 :class="['form-input', errors['student.level_id'] && 'input-error']"
               >
-                <option :value="0">Выберите уровень</option>
+                <option :value="0">{{ $t('studentRegistration.selectLevel') }}</option>
                 <option v-for="lv in levels" :key="lv.id" :value="lv.id">
-                  {{ lv.title || (lv.number + ' класс') }}
+                  {{ lv.title || (lv.number + ' ' + $t('studentRegistration.class')) }}
                 </option>
               </select>
               <small class="error-message" v-if="errors['student.level_id']">{{ errors['student.level_id'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Телефон</label>
+              <label class="form-label">{{ $t('studentRegistration.phone') }}</label>
               <input
                 v-model="s.phone"
                 :class="['form-input', errors['student.phone'] && 'input-error']"
@@ -261,7 +261,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Email <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.email') }} <span class="required">*</span></label>
               <input
                 type="email"
                 v-model="s.email"
@@ -272,13 +272,13 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Пароль <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.password') }} <span class="required">*</span></label>
               <div class="password-input-wrapper">
                 <input
                   :type="showPassword ? 'text' : 'password'"
                   v-model="s.password"
                   :class="['form-input', errors['student.password'] && 'input-error']"
-                  placeholder="Минимум 8 символов"
+                  :placeholder="$t('studentRegistration.passwordPlaceholder')"
                 />
                 <button type="button" @click="showPassword = !showPassword" class="password-toggle">
                   {{ showPassword ? '👁️' : '👁️‍🗨️' }}
@@ -288,13 +288,13 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Подтверждение пароля <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.passwordConfirmation') }} <span class="required">*</span></label>
               <div class="password-input-wrapper">
                 <input
                   :type="showPasswordConfirm ? 'text' : 'password'"
                   v-model="s.password_confirmation"
                   :class="['form-input', errors['student.password_confirmation'] && 'input-error']"
-                  placeholder="Повторите пароль"
+                  :placeholder="$t('studentRegistration.repeatPassword')"
                 />
                 <button type="button" @click="showPasswordConfirm = !showPasswordConfirm" class="password-toggle">
                   {{ showPasswordConfirm ? '👁️' : '👁️‍🗨️' }}
@@ -304,7 +304,7 @@
             </div>
 
             <div class="form-group form-group-full">
-              <label class="form-label">Фото студента (необязательно)</label>
+              <label class="form-label">{{ $t('studentRegistration.studentPhoto') }}</label>
               <div class="file-upload-wrapper">
                 <input
                   type="file"
@@ -314,8 +314,8 @@
                   id="photo-upload"
                 />
                 <label for="photo-upload" class="file-label">
-                  <span v-if="!studentPhotoPreview">📷 Выбрать фото</span>
-                  <span v-else>✓ Фото выбрано</span>
+                  <span v-if="!studentPhotoPreview">📷 {{ $t('studentRegistration.selectPhoto') }}</span>
+                  <span v-else>✓ {{ $t('studentRegistration.photoSelected') }}</span>
                 </label>
               </div>
               <small class="error-message" v-if="errors['student_photo']">{{ errors['student_photo'] }}</small>
@@ -330,7 +330,7 @@
 
         <div class="form-actions">
           <button @click="goStep2" class="btn btn-primary btn-large">
-            Далее: Документы
+            {{ $t('studentRegistration.nextStep') }}
             <span class="btn-icon">→</span>
           </button>
         </div>
@@ -339,12 +339,12 @@
       <!-- Шаг 2 -->
       <div v-else class="step-content">
         <div class="section">
-          <h2 class="section-title">Загрузка документов</h2>
-          <p class="section-description">Загрузите необходимые документы в формате JPEG, JPG или PDF</p>
+          <h2 class="section-title">{{ $t('studentRegistration.documentsSection') }}</h2>
+          <p class="section-description">{{ $t('studentRegistration.documentsDescription') }}</p>
 
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">Заявление родителя/представителя <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.guardianApplication') }} <span class="required">*</span></label>
               <div class="file-upload-box">
                 <input
                   type="file"
@@ -355,14 +355,14 @@
                 />
                 <label :for="'file-guardian-app'" class="file-upload-label">
                   <span class="file-icon">📄</span>
-                  <span class="file-text">{{ files.guardian_application ? files.guardian_application.name : 'Выбрать файл' }}</span>
+                  <span class="file-text">{{ files.guardian_application ? files.guardian_application.name : $t('studentRegistration.selectFile') }}</span>
                 </label>
               </div>
               <small class="error-message" v-if="errors['guardian_application']">{{ errors['guardian_application'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Копия паспорта родителя <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.guardianPassport') }} <span class="required">*</span></label>
               <div class="file-upload-box">
                 <input
                   type="file"
@@ -373,14 +373,14 @@
                 />
                 <label :for="'file-guardian-pass'" class="file-upload-label">
                   <span class="file-icon">📄</span>
-                  <span class="file-text">{{ files.guardian_passport ? files.guardian_passport.name : 'Выбрать файл' }}</span>
+                  <span class="file-text">{{ files.guardian_passport ? files.guardian_passport.name : $t('studentRegistration.selectFile') }}</span>
                 </label>
               </div>
               <small class="error-message" v-if="errors['guardian_passport']">{{ errors['guardian_passport'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Свидетельство о рождении <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.birthCertificate') }} <span class="required">*</span></label>
               <div class="file-upload-box">
                 <input
                   type="file"
@@ -391,14 +391,14 @@
                 />
                 <label :for="'file-birth-cert'" class="file-upload-label">
                   <span class="file-icon">📄</span>
-                  <span class="file-text">{{ files.birth_certificate ? files.birth_certificate.name : 'Выбрать файл' }}</span>
+                  <span class="file-text">{{ files.birth_certificate ? files.birth_certificate.name : $t('studentRegistration.selectFile') }}</span>
                 </label>
               </div>
               <small class="error-message" v-if="errors['birth_certificate']">{{ errors['birth_certificate'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Документ с PIN-кодом студента <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.studentPinDoc') }} <span class="required">*</span></label>
               <div class="file-upload-box">
                 <input
                   type="file"
@@ -409,14 +409,14 @@
                 />
                 <label :for="'file-pin-doc'" class="file-upload-label">
                   <span class="file-icon">📄</span>
-                  <span class="file-text">{{ files.student_pin_doc ? files.student_pin_doc.name : 'Выбрать файл' }}</span>
+                  <span class="file-text">{{ files.student_pin_doc ? files.student_pin_doc.name : $t('studentRegistration.selectFile') }}</span>
                 </label>
               </div>
               <small class="error-message" v-if="errors['student_pin_doc']">{{ errors['student_pin_doc'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Медицинская справка <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.medicalCertificate') }} <span class="required">*</span></label>
               <div class="file-upload-box">
                 <input
                   type="file"
@@ -427,14 +427,14 @@
                 />
                 <label :for="'file-medical'" class="file-upload-label">
                   <span class="file-icon">📄</span>
-                  <span class="file-text">{{ files.medical_certificate ? files.medical_certificate.name : 'Выбрать файл' }}</span>
+                  <span class="file-text">{{ files.medical_certificate ? files.medical_certificate.name : $t('studentRegistration.selectFile') }}</span>
                 </label>
               </div>
               <small class="error-message" v-if="errors['medical_certificate']">{{ errors['medical_certificate'] }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Скан-копия личного дела из предыдущего учебного заведения <span class="required">*</span></label>
+              <label class="form-label">{{ $t('studentRegistration.previousSchoolRecord') }} <span class="required">*</span></label>
               <div class="file-upload-box">
                 <input
                   type="file"
@@ -445,7 +445,7 @@
                 />
                 <label :for="'file-prev-school'" class="file-upload-label">
                   <span class="file-icon">📄</span>
-                  <span class="file-text">{{ files.previous_school_record ? files.previous_school_record.name : 'Выбрать файл' }}</span>
+                  <span class="file-text">{{ files.previous_school_record ? files.previous_school_record.name : $t('studentRegistration.selectFile') }}</span>
                 </label>
               </div>
               <small class="error-message" v-if="errors['previous_school_record']">{{ errors['previous_school_record'] }}</small>
@@ -455,17 +455,17 @@
 
         <div v-if="error2" class="alert alert-error">{{ error2 }}</div>
         <div v-if="ok" class="alert alert-success">
-          <strong>✓ Регистрация завершена успешно!</strong>
-          <p>Данные ученика сохранены. Вы можете войти в систему используя PIN и пароль.</p>
+          <strong>✓ {{ $t('studentRegistration.successTitle') }}</strong>
+          <p>{{ $t('studentRegistration.successMessage') }}</p>
         </div>
 
         <div class="form-actions" v-if="!ok">
           <button @click="step=1" class="btn btn-secondary">
             <span class="btn-icon">←</span>
-            Назад
+            {{ $t('studentRegistration.back') }}
           </button>
           <button @click="submitAll" :disabled="saving" class="btn btn-primary btn-large">
-            {{ saving ? 'Отправка...' : 'Завершить регистрацию' }}
+            {{ saving ? $t('studentRegistration.sending') : $t('studentRegistration.finishRegistration') }}
           </button>
         </div>
       </div>
@@ -476,6 +476,9 @@
 <script setup lang="ts">
 import api from '../utils/api'
 import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const step = ref<1|2>(1)
 const error1 = ref(''); const error2 = ref('')
@@ -583,28 +586,28 @@ function handlePhotoChange(e: Event) {
 function validateClient(): boolean {
   clearErrors()
   // guardian
-  if (!g.value.last_name) setFieldError('guardian.last_name','Обязательное поле')
-  if (!g.value.first_name) setFieldError('guardian.first_name','Обязательное поле')
-  if (!['male','female'].includes(g.value.sex)) setFieldError('guardian.sex','Выберите пол')
-  if (!g.value.citizenship) setFieldError('guardian.citizenship','Обязательное поле')
-  if (!/^\d{14}$/.test(g.value.pin)) setFieldError('guardian.pin','PIN: 14 цифр')
-  if (!g.value.phone) setFieldError('guardian.phone','Обязательное поле')
-  if (!g.value.address) setFieldError('guardian.address','Обязательное поле')
-  if (!g.value.email || !g.value.email.includes('@')) setFieldError('guardian.email','Некорректный email')
+  if (!g.value.last_name) setFieldError('guardian.last_name', t('studentRegistration.validation.required'))
+  if (!g.value.first_name) setFieldError('guardian.first_name', t('studentRegistration.validation.required'))
+  if (!['male','female'].includes(g.value.sex)) setFieldError('guardian.sex', t('studentRegistration.validation.selectSex'))
+  if (!g.value.citizenship) setFieldError('guardian.citizenship', t('studentRegistration.validation.required'))
+  if (!/^\d{14}$/.test(g.value.pin)) setFieldError('guardian.pin', t('studentRegistration.validation.pin14'))
+  if (!g.value.phone) setFieldError('guardian.phone', t('studentRegistration.validation.required'))
+  if (!g.value.address) setFieldError('guardian.address', t('studentRegistration.validation.required'))
+  if (!g.value.email || !g.value.email.includes('@')) setFieldError('guardian.email', t('studentRegistration.validation.invalidEmail'))
 
   // student
-  if (!s.value.last_name) setFieldError('student.last_name','Обязательное поле')
-  if (!s.value.first_name) setFieldError('student.first_name','Обязательное поле')
+  if (!s.value.last_name) setFieldError('student.last_name', t('studentRegistration.validation.required'))
+  if (!s.value.first_name) setFieldError('student.first_name', t('studentRegistration.validation.required'))
   if (!s.value.pin || !/^\d{14}$/.test(s.value.pin)) {
-    setFieldError('student.pin','PIN ученика: ровно 14 цифр')
+    setFieldError('student.pin', t('studentRegistration.validation.studentPin14'))
   }
-  if (!['male','female'].includes(s.value.sex)) setFieldError('student.sex','Выберите пол')
-  if (!s.value.citizenship) setFieldError('student.citizenship','Обязательное поле')
-  if (!s.value.birth_date) setFieldError('student.birth_date','Обязательное поле')
-  if (!level_id.value) setFieldError('student.level_id','Выберите уровень (класс)')
-  if (!s.value.email || !s.value.email.includes('@')) setFieldError('student.email','Некорректный email')
-  if (!s.value.password) setFieldError('student.password','Введите пароль')
-  if (s.value.password !== s.value.password_confirmation) setFieldError('student.password_confirmation','Пароли не совпадают')
+  if (!['male','female'].includes(s.value.sex)) setFieldError('student.sex', t('studentRegistration.validation.selectSex'))
+  if (!s.value.citizenship) setFieldError('student.citizenship', t('studentRegistration.validation.required'))
+  if (!s.value.birth_date) setFieldError('student.birth_date', t('studentRegistration.validation.required'))
+  if (!level_id.value) setFieldError('student.level_id', t('studentRegistration.validation.selectLevel'))
+  if (!s.value.email || !s.value.email.includes('@')) setFieldError('student.email', t('studentRegistration.validation.invalidEmail'))
+  if (!s.value.password) setFieldError('student.password', t('studentRegistration.validation.enterPassword'))
+  if (s.value.password !== s.value.password_confirmation) setFieldError('student.password_confirmation', t('studentRegistration.validation.passwordMismatch'))
 
   return Object.keys(errors.value).length === 0
 }
@@ -615,7 +618,7 @@ async function goStep2() {
   error1.value = ''
   try {
     if (!validateClient()) {
-      throw new Error('Исправьте ошибки в форме')
+      throw new Error(t('studentRegistration.validation.fixErrors'))
     }
     // префлайт: серверная проверка 422/200 (204)
     const payload = {
@@ -632,9 +635,9 @@ async function goStep2() {
       for (const [field, msgs] of Object.entries(e.data.errors)) {
         setFieldError(String(field), (msgs as string[]).join(', '))
       }
-      error1.value = 'Проверьте заполнение полей'
+      error1.value = t('studentRegistration.validation.checkFields')
     } else {
-      error1.value = e?.data?.message || e?.message || 'Ошибка валидации'
+      error1.value = e?.data?.message || e?.message || t('studentRegistration.validation.validationError')
     }
   }
 }
@@ -646,27 +649,27 @@ function validateDocuments(): boolean {
 
   // Проверяем все обязательные документы
   if (!files.value.guardian_application) {
-    setFieldError('guardian_application', 'Обязательное поле')
+    setFieldError('guardian_application', t('studentRegistration.validation.required'))
     hasErrors = true
   }
   if (!files.value.guardian_passport) {
-    setFieldError('guardian_passport', 'Обязательное поле')
+    setFieldError('guardian_passport', t('studentRegistration.validation.required'))
     hasErrors = true
   }
   if (!files.value.birth_certificate) {
-    setFieldError('birth_certificate', 'Обязательное поле')
+    setFieldError('birth_certificate', t('studentRegistration.validation.required'))
     hasErrors = true
   }
   if (!files.value.student_pin_doc) {
-    setFieldError('student_pin_doc', 'Обязательное поле')
+    setFieldError('student_pin_doc', t('studentRegistration.validation.required'))
     hasErrors = true
   }
   if (!files.value.medical_certificate) {
-    setFieldError('medical_certificate', 'Обязательное поле')
+    setFieldError('medical_certificate', t('studentRegistration.validation.required'))
     hasErrors = true
   }
   if (!files.value.previous_school_record) {
-    setFieldError('previous_school_record', 'Обязательное поле')
+    setFieldError('previous_school_record', t('studentRegistration.validation.required'))
     hasErrors = true
   }
 
@@ -679,7 +682,7 @@ async function submitAll() {
   try {
     // Проверяем, что все документы загружены
     if (!validateDocuments()) {
-      error2.value = 'Пожалуйста, загрузите все обязательные документы'
+      error2.value = t('studentRegistration.validation.uploadAllDocuments')
       saving.value = false
       return
     }
@@ -722,7 +725,7 @@ async function submitAll() {
       }
       error2.value = messages.join('\n')
     } else {
-      error2.value = e?.data?.message || e?.message || 'Ошибка при отправке'
+      error2.value = e?.data?.message || e?.message || t('studentRegistration.validation.submissionError')
     }
   } finally {
     saving.value = false

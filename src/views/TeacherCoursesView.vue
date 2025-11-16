@@ -1,28 +1,28 @@
 <template>
   <div class="container">
     <div class="page-header">
-      <h2>Мои курсы</h2>
+      <h2>{{ $t('teacherCourses.title') }}</h2>
     </div>
 
     <div class="card">
-      <h3>Создать новый курс</h3>
+      <h3>{{ $t('teacherCourses.createNew') }}</h3>
       <div class="form-row">
         <div class="form-group">
-          <label>Предмет</label>
+          <label>{{ $t('teacherCourses.subject') }}</label>
           <select v-model.number="form.subject_id" class="form-input">
-            <option :value="0">Выберите предмет</option>
+            <option :value="0">{{ $t('teacherCourses.selectSubject') }}</option>
             <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Класс</label>
+          <label>{{ $t('teacherCourses.class') }}</label>
           <select v-model.number="form.level_id" class="form-input">
-            <option :value="0">Выберите класс</option>
-            <option v-for="l in levels" :key="l.id" :value="l.id">{{ l.number }} класс</option>
+            <option :value="0">{{ $t('teacherCourses.selectClass') }}</option>
+            <option v-for="l in levels" :key="l.id" :value="l.id">{{ l.number }} {{ $t('teacherCourses.classWord') }}</option>
           </select>
         </div>
         <div class="form-group">
-          <button class="btn-create" @click="createCourse">Создать курс</button>
+          <button class="btn-create" @click="createCourse">{{ $t('teacherCourses.createCourse') }}</button>
         </div>
       </div>
     </div>
@@ -34,20 +34,20 @@
         </div>
         <div class="course-info">
           <div class="info-item">
-            <span class="info-label">Предмет:</span>
+            <span class="info-label">{{ $t('teacherCourses.subject') }}:</span>
             <span class="info-value">{{ c.subject }}</span>
           </div>
           <div class="info-item">
-            <span class="info-label">Класс:</span>
+            <span class="info-label">{{ $t('teacherCourses.class') }}:</span>
             <span class="info-value">{{ c.level }}</span>
           </div>
           <div class="info-item">
-            <span class="info-label">Статус:</span>
+            <span class="info-label">{{ $t('teacherCourses.status') }}:</span>
             <span class="info-value">{{ c.status }}</span>
           </div>
         </div>
         <router-link class="btn-open" :to="`/teacher/courses/${c.id}/edit`">
-          Открыть курс
+          {{ $t('teacherCourses.openCourse') }}
         </router-link>
       </div>
     </div>
@@ -58,7 +58,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
+
+const { t } = useI18n()
 
 const rows = ref<any[]>([])
 const subjects = ref<any[]>([])
@@ -71,7 +74,7 @@ async function loadLevels(){ const { data } = await api.get('/levels'); levels.v
 async function load(){ const { data } = await api.get('/teacher/courses'); rows.value = data }
 
 async function createCourse(){
-  if (!form.value.subject_id || !form.value.level_id) { alert('Выберите предмет и уровень'); return }
+  if (!form.value.subject_id || !form.value.level_id) { alert(t('teacherCourses.selectBoth')); return }
   const { data } = await api.post('/teacher/courses', form.value)
   // после создания попадём в редактор
   window.location.href = `/teacher/courses/${data.id}/edit`

@@ -1,62 +1,62 @@
 <template>
   <div class="card">
-    <h3>Восстановление пароля</h3>
+    <h3>{{ $t('forgotPassword.title') }}</h3>
 
     <!-- Шаг 1: Ввод PIN -->
     <div v-if="step === 1">
       <p style="color: #666; margin-bottom: 16px;">
-        Введите ваш PIN для получения кода восстановления на email
+        {{ $t('forgotPassword.step1Description') }}
       </p>
-      <label>PIN</label>
+      <label>{{ $t('forgotPassword.pinLabel') }}</label>
       <input
         v-model="pin"
-        placeholder="12345678901234"
+        :placeholder="$t('forgotPassword.pinPlaceholder')"
         maxlength="14"
         @keyup.enter="sendCode"
       />
       <button @click="sendCode" :disabled="loading">
-        {{ loading ? 'Отправка...' : 'Отправить код' }}
+        {{ loading ? $t('forgotPassword.sending') : $t('forgotPassword.sendCodeButton') }}
       </button>
       <div v-if="maskedEmail" style="color: #28a745; margin-top: 8px;">
-        Код отправлен на {{ maskedEmail }}
+        {{ $t('forgotPassword.codeSentTo', { email: maskedEmail }) }}
       </div>
       <div v-if="error" class="error" style="margin-top: 8px;">{{ error }}</div>
       <RouterLink to="/login" style="display: block; margin-top: 16px; color: #007bff;">
-        Вернуться к входу
+        {{ $t('forgotPassword.backToLogin') }}
       </RouterLink>
     </div>
 
     <!-- Шаг 2: Ввод кода и нового пароля -->
     <div v-if="step === 2">
       <p style="color: #666; margin-bottom: 16px;">
-        Введите код из email и новый пароль
+        {{ $t('forgotPassword.step2Description') }}
       </p>
-      <label>Код из email</label>
+      <label>{{ $t('forgotPassword.codeLabel') }}</label>
       <input
         v-model="code"
-        placeholder="123456"
+        :placeholder="$t('forgotPassword.codePlaceholder')"
         maxlength="6"
         @keyup.enter="resetPassword"
       />
-      <label>Новый пароль</label>
+      <label>{{ $t('forgotPassword.newPasswordLabel') }}</label>
       <input
         v-model="password"
         type="password"
-        placeholder="Минимум 6 символов"
+        :placeholder="$t('forgotPassword.newPasswordPlaceholder')"
         @keyup.enter="resetPassword"
       />
-      <label>Подтверждение пароля</label>
+      <label>{{ $t('forgotPassword.confirmPasswordLabel') }}</label>
       <input
         v-model="passwordConfirmation"
         type="password"
-        placeholder="Повторите пароль"
+        :placeholder="$t('forgotPassword.confirmPasswordPlaceholder')"
         @keyup.enter="resetPassword"
       />
       <button @click="resetPassword" :disabled="loading">
-        {{ loading ? 'Сохранение...' : 'Сбросить пароль' }}
+        {{ loading ? $t('forgotPassword.saving') : $t('forgotPassword.resetPasswordButton') }}
       </button>
       <button @click="goBackToStep1" style="background: #6c757d; margin-top: 8px;">
-        Отправить код повторно
+        {{ $t('forgotPassword.resendCode') }}
       </button>
       <div v-if="error" class="error" style="margin-top: 8px;">{{ error }}</div>
     </div>
@@ -64,10 +64,10 @@
     <!-- Шаг 3: Успех -->
     <div v-if="step === 3">
       <div style="color: #28a745; text-align: center; padding: 24px;">
-        <h4>✓ Пароль успешно изменен!</h4>
-        <p>Теперь вы можете войти с новым паролем</p>
+        <h4>{{ $t('forgotPassword.successTitle') }}</h4>
+        <p>{{ $t('forgotPassword.successMessage') }}</p>
         <RouterLink to="/login">
-          <button style="margin-top: 16px;">Перейти к входу</button>
+          <button style="margin-top: 16px;">{{ $t('forgotPassword.goToLogin') }}</button>
         </RouterLink>
       </div>
     </div>
@@ -77,7 +77,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
+
+const { t } = useI18n()
 
 const step = ref(1)
 const pin = ref('')
@@ -91,7 +94,7 @@ const loading = ref(false)
 const sendCode = async () => {
   error.value = ''
   if (!pin.value || pin.value.length !== 14) {
-    error.value = 'PIN должен содержать 14 символов'
+    error.value = t('forgotPassword.pinValidation')
     return
   }
 
@@ -101,7 +104,7 @@ const sendCode = async () => {
     maskedEmail.value = data.email
     step.value = 2
   } catch (e: any) {
-    error.value = e?.response?.data?.message || 'Ошибка отправки кода'
+    error.value = e?.response?.data?.message || t('forgotPassword.sendCodeError')
   } finally {
     loading.value = false
   }
@@ -111,17 +114,17 @@ const resetPassword = async () => {
   error.value = ''
 
   if (!code.value || code.value.length !== 6) {
-    error.value = 'Код должен содержать 6 цифр'
+    error.value = t('forgotPassword.codeValidation')
     return
   }
 
   if (!password.value || password.value.length < 6) {
-    error.value = 'Пароль должен содержать минимум 6 символов'
+    error.value = t('forgotPassword.passwordValidation')
     return
   }
 
   if (password.value !== passwordConfirmation.value) {
-    error.value = 'Пароли не совпадают'
+    error.value = t('forgotPassword.passwordMismatch')
     return
   }
 
@@ -135,7 +138,7 @@ const resetPassword = async () => {
     })
     step.value = 3
   } catch (e: any) {
-    error.value = e?.response?.data?.message || 'Ошибка сброса пароля'
+    error.value = e?.response?.data?.message || t('forgotPassword.resetPasswordError')
   } finally {
     loading.value = false
   }

@@ -4,31 +4,31 @@
       <!-- Header -->
       <div class="login-header">
         <div class="login-icon">🔐</div>
-        <h1>Вход в систему</h1>
-        <p class="subtitle">Введите свой PIN и пароль для входа</p>
+        <h1>{{ $t('login.title') }}</h1>
+        <p class="subtitle">{{ $t('login.subtitle') }}</p>
       </div>
 
       <!-- Form -->
       <div class="login-form">
         <div class="form-group">
-          <label class="form-label">PIN (14 цифр)</label>
+          <label class="form-label">{{ $t('login.pinLabel') }}</label>
           <input
             v-model="pin"
             class="form-input"
-            placeholder="00000000000000"
+            :placeholder="$t('login.pinPlaceholder')"
             maxlength="14"
             @keyup.enter="doLogin"
           />
         </div>
 
         <div class="form-group">
-          <label class="form-label">Пароль</label>
+          <label class="form-label">{{ $t('login.passwordLabel') }}</label>
           <div class="password-input-wrapper">
             <input
               :type="showPassword ? 'text' : 'password'"
               v-model="password"
               class="form-input"
-              placeholder="Введите пароль"
+              :placeholder="$t('login.passwordPlaceholder')"
               @keyup.enter="doLogin"
             />
             <button type="button" @click="showPassword = !showPassword" class="password-toggle">
@@ -40,15 +40,15 @@
         <div v-if="error" class="alert alert-error">{{ error }}</div>
 
         <button @click="doLogin" class="btn btn-primary btn-block" :disabled="!pin || !password">
-          Войти
+          {{ $t('login.loginButton') }}
         </button>
 
         <div class="login-links">
           <RouterLink to="/forgot-password" class="link link-primary">
-            Забыли пароль?
+            {{ $t('login.forgotPassword') }}
           </RouterLink>
           <RouterLink to="/register-student" class="link link-success">
-            Регистрация студента
+            {{ $t('login.registerStudent') }}
           </RouterLink>
         </div>
       </div>
@@ -59,7 +59,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
+
+const { t } = useI18n()
 
 const pin = ref('')
 const password = ref('')
@@ -87,7 +90,7 @@ const doLogin = async () => {
       router.push('/')
     }
   } catch (e: any) {
-    error.value = e?.data?.message || 'Неверный PIN или пароль'
+    error.value = e?.data?.message || t('login.invalidCredentials')
   }
 }
 </script>

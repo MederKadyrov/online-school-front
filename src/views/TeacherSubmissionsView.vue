@@ -1,51 +1,51 @@
 <template>
   <div class="submissions-container">
-    <h2>Работы студентов</h2>
+    <h2>{{ $t('teacherSubmissions.title') }}</h2>
 
     <!-- Фильтры -->
     <div class="filters">
       <div class="filter-row">
         <div class="filter-item">
-          <label>Статус</label>
+          <label>{{ $t('teacherSubmissions.status') }}</label>
           <select v-model="filters.status" class="inp" @change="loadSubmissions">
-            <option value="">Все</option>
-            <option value="submitted">Отправлено</option>
-            <option value="graded">Оценено</option>
-            <option value="returned">Возвращено</option>
-            <option value="needs_fix">Требует доработки</option>
+            <option value="">{{ $t('teacherSubmissions.all') }}</option>
+            <option value="submitted">{{ $t('teacherSubmissions.statusSubmitted') }}</option>
+            <option value="graded">{{ $t('teacherSubmissions.statusGraded') }}</option>
+            <option value="returned">{{ $t('teacherSubmissions.statusReturned') }}</option>
+            <option value="needs_fix">{{ $t('teacherSubmissions.statusNeedsFix') }}</option>
           </select>
         </div>
 
         <div class="filter-item">
-          <label>Курс</label>
+          <label>{{ $t('teacherSubmissions.course') }}</label>
           <select v-model="filters.course_id" class="inp" @change="onCourseChange">
-            <option value="">Все курсы</option>
+            <option value="">{{ $t('teacherSubmissions.allCourses') }}</option>
             <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.title }}</option>
           </select>
         </div>
 
         <div class="filter-item">
-          <label>Группа</label>
+          <label>{{ $t('teacherSubmissions.group') }}</label>
           <select v-model="filters.group_id" class="inp" @change="loadSubmissions">
-            <option value="">Все группы</option>
+            <option value="">{{ $t('teacherSubmissions.allGroups') }}</option>
             <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.display_name }}</option>
           </select>
         </div>
 
         <div class="filter-item">
-          <label>Задание</label>
+          <label>{{ $t('teacherSubmissions.assignment') }}</label>
           <select v-model="filters.assignment_id" class="inp" @change="loadSubmissions" :disabled="!filters.course_id">
-            <option value="">{{ filters.course_id ? 'Все задания курса' : 'Сначала выберите курс' }}</option>
+            <option value="">{{ filters.course_id ? $t('teacherSubmissions.allAssignments') : $t('teacherSubmissions.selectCourseFirst') }}</option>
             <option v-for="a in assignments" :key="a.id" :value="a.id">{{ a.display_name }}</option>
           </select>
         </div>
 
         <div class="filter-item">
-          <label>Поиск студента</label>
+          <label>{{ $t('teacherSubmissions.searchStudent') }}</label>
           <input
             v-model="filters.student_search"
             class="inp"
-            placeholder="Имя студента"
+            :placeholder="$t('teacherSubmissions.studentName')"
             @input="debouncedLoad"
           />
         </div>
@@ -54,9 +54,9 @@
 
     <!-- Счётчики -->
     <div class="counters">
-      <span class="counter">Всего: <strong>{{ submissions.length }}</strong></span>
-      <span class="counter ungraded">Непроверенных: <strong>{{ ungradedCount }}</strong></span>
-      <span class="counter graded">Проверенных: <strong>{{ gradedCount }}</strong></span>
+      <span class="counter">{{ $t('teacherSubmissions.total') }}: <strong>{{ submissions.length }}</strong></span>
+      <span class="counter ungraded">{{ $t('teacherSubmissions.ungraded') }}: <strong>{{ ungradedCount }}</strong></span>
+      <span class="counter graded">{{ $t('teacherSubmissions.graded') }}: <strong>{{ gradedCount }}</strong></span>
     </div>
 
     <!-- Таблица -->
@@ -64,14 +64,14 @@
       <table class="submissions-table" v-if="submissions.length">
         <thead>
           <tr>
-            <th>Студент</th>
-            <th>Группа</th>
-            <th>Курс</th>
-            <th>Задание</th>
-            <th>Дата отправки</th>
-            <th>Статус</th>
-            <th>Оценка</th>
-            <th>Действия</th>
+            <th>{{ $t('teacherSubmissions.student') }}</th>
+            <th>{{ $t('teacherSubmissions.group') }}</th>
+            <th>{{ $t('teacherSubmissions.course') }}</th>
+            <th>{{ $t('teacherSubmissions.assignment') }}</th>
+            <th>{{ $t('teacherSubmissions.submittedDate') }}</th>
+            <th>{{ $t('teacherSubmissions.status') }}</th>
+            <th>{{ $t('teacherSubmissions.grade') }}</th>
+            <th>{{ $t('teacherSubmissions.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -88,7 +88,7 @@
             </td>
             <td>{{ s.grade_5 ?? '—' }}</td>
             <td class="actions-cell">
-              <button class="btn xs" @click="openGradeModal(s)" title="Проверить">
+              <button class="btn xs" @click="openGradeModal(s)" :title="$t('teacherSubmissions.review')">
                 ✏️
               </button>
               <a
@@ -96,7 +96,7 @@
                 :href="storageUrl(s.file_path)"
                 target="_blank"
                 class="btn xs"
-                title="Скачать файл"
+                :title="$t('teacherSubmissions.downloadFile')"
               >
                 📎
               </a>
@@ -104,58 +104,58 @@
           </tr>
         </tbody>
       </table>
-      <p v-else class="muted">Нет отправок</p>
+      <p v-else class="muted">{{ $t('teacherSubmissions.noSubmissions') }}</p>
     </div>
 
     <!-- Модалка для проверки -->
     <div v-if="gradeModal.open" class="modal-overlay" @click.self="closeGradeModal">
       <div class="modal-content">
         <button class="close-btn" @click="closeGradeModal">×</button>
-        <h3>Проверка работы</h3>
+        <h3>{{ $t('teacherSubmissions.reviewWork') }}</h3>
 
         <div class="submission-details">
-          <p><strong>Студент:</strong> {{ gradeModal.submission?.student?.name }}</p>
-          <p><strong>Группа:</strong> {{ gradeModal.submission?.group?.name }}</p>
-          <p><strong>Задание:</strong> {{ gradeModal.submission?.assignment?.title }}</p>
-          <p><strong>Дата отправки:</strong> {{ formatDate(gradeModal.submission?.submitted_at) }}</p>
+          <p><strong>{{ $t('teacherSubmissions.student') }}:</strong> {{ gradeModal.submission?.student?.name }}</p>
+          <p><strong>{{ $t('teacherSubmissions.group') }}:</strong> {{ gradeModal.submission?.group?.name }}</p>
+          <p><strong>{{ $t('teacherSubmissions.assignment') }}:</strong> {{ gradeModal.submission?.assignment?.title }}</p>
+          <p><strong>{{ $t('teacherSubmissions.submittedDate') }}:</strong> {{ formatDate(gradeModal.submission?.submitted_at) }}</p>
         </div>
 
         <div v-if="gradeModal.submission?.text_answer" class="text-answer">
-          <label>Текстовый ответ:</label>
+          <label>{{ $t('teacherSubmissions.textAnswer') }}:</label>
           <div class="answer-box">{{ gradeModal.submission.text_answer }}</div>
         </div>
 
         <div v-if="gradeModal.submission?.file_path" class="file-download">
-          <label>Файл:</label>
+          <label>{{ $t('teacherSubmissions.file') }}:</label>
           <a :href="storageUrl(gradeModal.submission.file_path)" target="_blank" class="btn">
-            📎 Скачать файл
+            📎 {{ $t('teacherSubmissions.downloadFile') }}
           </a>
         </div>
 
         <div class="grade-form">
           <div class="form-row">
             <div class="form-item">
-              <label>Оценка <span class="req">*</span></label>
+              <label>{{ $t('teacherSubmissions.grade') }} <span class="req">*</span></label>
               <select v-model.number="gradeModal.form.grade_5" class="inp">
-                <option :value="null">Не выбрано</option>
-                <option :value="2">2 (неудовлетворительно)</option>
-                <option :value="3">3 (удовлетворительно)</option>
-                <option :value="4">4 (хорошо)</option>
-                <option :value="5">5 (отлично)</option>
+                <option :value="null">{{ $t('teacherSubmissions.notSelected') }}</option>
+                <option :value="2">2 ({{ $t('teacherSubmissions.unsatisfactory') }})</option>
+                <option :value="3">3 ({{ $t('teacherSubmissions.satisfactory') }})</option>
+                <option :value="4">4 ({{ $t('teacherSubmissions.good') }})</option>
+                <option :value="5">5 ({{ $t('teacherSubmissions.excellent') }})</option>
               </select>
             </div>
           </div>
 
           <div class="form-item">
-            <label>Комментарий</label>
-            <textarea v-model="gradeModal.form.teacher_comment" class="inp" rows="4" placeholder="Оставьте комментарий студенту"></textarea>
+            <label>{{ $t('teacherSubmissions.comment') }}</label>
+            <textarea v-model="gradeModal.form.teacher_comment" class="inp" rows="4" :placeholder="$t('teacherSubmissions.commentPlaceholder')"></textarea>
           </div>
 
           <div class="modal-actions">
             <button class="btn primary" @click="submitGrade" :disabled="gradeModal.saving">
-              {{ gradeModal.saving ? 'Сохранение...' : 'Выставить оценку' }}
+              {{ gradeModal.saving ? $t('teacherSubmissions.saving') : $t('teacherSubmissions.submitGrade') }}
             </button>
-            <button class="btn" @click="closeGradeModal">Отмена</button>
+            <button class="btn" @click="closeGradeModal">{{ $t('teacherSubmissions.cancel') }}</button>
           </div>
 
           <p v-if="gradeModal.err" class="error">{{ gradeModal.err }}</p>
@@ -170,7 +170,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '../utils/api'
+
+const { t } = useI18n()
 
 const submissions = ref<any[]>([])
 const courses = ref<any[]>([])
@@ -223,13 +226,11 @@ function formatDate(dateStr: string | null) {
 }
 
 function statusLabel(status: string) {
-  const labels: Record<string, string> = {
-    'submitted': 'Отправлено',
-    'graded': 'Оценено',
-    'returned': 'Возвращено',
-    'needs_fix': 'Требует доработки'
-  }
-  return labels[status] || status
+  if (status === 'submitted') return t('teacherSubmissions.statusSubmitted')
+  if (status === 'graded') return t('teacherSubmissions.statusGraded')
+  if (status === 'returned') return t('teacherSubmissions.statusReturned')
+  if (status === 'needs_fix') return t('teacherSubmissions.statusNeedsFix')
+  return status
 }
 
 function statusClass(status: string) {
